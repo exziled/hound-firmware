@@ -1,0 +1,8 @@
+*.elf
+*.bin
+*.hex
+*.o
+*.map
+*.o.d
+firmware/ci/*
+

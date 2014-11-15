@@ -161,19 +161,6 @@ extern STM32_Pin_Info PIN_MAP[];
 extern "C" {
 #endif
 
-/*
-* ADC
-*/
-void setADCSampleTime(uint8_t ADC_SampleTime);
-
-/*
-* GPIO
-*/
-void pinMode(uint16_t pin, PinMode mode);
-void digitalWrite(uint16_t pin, uint8_t value);
-int32_t digitalRead(uint16_t pin);
-int32_t analogRead(uint16_t pin);
-void analogWrite(uint16_t pin, uint8_t value);
 
 /*
 * Timing
@@ -182,11 +169,6 @@ system_tick_t millis(void);
 unsigned long micros(void);
 void delay(unsigned long ms);
 void delayMicroseconds(unsigned int us);
-
-long map(long value, long fromStart, long fromEnd, long toStart, long toEnd);
-
-void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
-uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder);
 
 #ifdef __cplusplus
 }

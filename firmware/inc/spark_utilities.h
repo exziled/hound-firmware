@@ -103,41 +103,11 @@ public:
 	static void brightness(uint8_t, bool update=true);
 };
 
-class SparkClass {
-public:
-	static void variable(const char *varKey, void *userVar, Spark_Data_TypeDef userVarType);
-	static void function(const char *funcKey, int (*pFunc)(String paramString));
-	static void publish(const char *eventName);
-	static void publish(const char *eventName, const char *eventData);
-	static void publish(const char *eventName, const char *eventData, int ttl);
-	static void publish(const char *eventName, const char *eventData, int ttl, Spark_Event_TypeDef eventType);
-	static void publish(String eventName);
-	static void publish(String eventName, String eventData);
-	static void publish(String eventName, String eventData, int ttl);
-	static void publish(String eventName, String eventData, int ttl, Spark_Event_TypeDef eventType);
-	static bool subscribe(const char *eventName, EventHandler handler);
-	static bool subscribe(const char *eventName, EventHandler handler, Spark_Subscription_Scope_TypeDef scope);
-	static bool subscribe(const char *eventName, EventHandler handler, const char *deviceID);
-	static bool subscribe(String eventName, EventHandler handler);
-	static bool subscribe(String eventName, EventHandler handler, Spark_Subscription_Scope_TypeDef scope);
-	static bool subscribe(String eventName, EventHandler handler, String deviceID);
-	static void sleep(Spark_Sleep_TypeDef sleepMode, long seconds);
-	static void sleep(long seconds);
-	static void sleep(uint16_t wakeUpPin, uint16_t edgeTriggerMode);
-	static void sleep(uint16_t wakeUpPin, uint16_t edgeTriggerMode, long seconds);
-	static bool connected(void);
-	static void connect(void);
-	static void disconnect(void);
-        static void process(void);
-	static String deviceID(void);
-	static void syncTime(void);
-};
 
 #define SYSTEM_MODE(mode)  SystemClass SystemMode(mode);
 
 extern SystemClass System;
 extern RGBClass RGB;
-extern SparkClass Spark;
 
 extern __IO uint8_t LED_Spark_Signal;
 

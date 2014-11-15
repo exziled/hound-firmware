@@ -1,6 +1,6 @@
 
 WHO = $(USER)
-WHO = techplex
+#WHO = techplex
 
 export SPARK_CORE_ID=
 export SPARK_ACCESS_TOKEN=

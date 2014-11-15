@@ -588,7 +588,7 @@ void SPARK_WLAN_Loop(void)
 
     if(SPARK_FLASH_UPDATE || System.mode() != MANUAL)
     {
-      Spark.process();
+      //Spark.process();
     }
   }
 }

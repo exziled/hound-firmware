@@ -275,11 +275,11 @@ int main(void)
 			g_Identity = new HoundIdentity;
 			g_Identity->retrieveIdentity();
 
-			pinMode(g_heartbeatLED, OUTPUT);
-			pinMode(g_subscriptionLED, OUTPUT);
+			// pinMode(g_heartbeatLED, OUTPUT);
+			// pinMode(g_subscriptionLED, OUTPUT);
 
-			pinMode(g_socketOne, OUTPUT);
-			pinMode(g_socketTwo, OUTPUT);
+			// pinMode(g_socketOne, OUTPUT);
+			// pinMode(g_socketTwo, OUTPUT);
 
 			com_demo = new Communication::HoundProto(9080);
 
@@ -334,7 +334,7 @@ int main(void)
 						lcd->printf("I Failed %d", count++);
 					}
 
-					digitalWrite(g_heartbeatLED, !digitalRead(g_heartbeatLED));
+					//digitalWrite(g_heartbeatLED, !digitalRead(g_heartbeatLED));
 					g_lastBeat = millis();
 				}
 
@@ -451,7 +451,7 @@ int main(void)
 
 				if (millis() - g_lastSync > ONE_DAY_MILLIS) {
 					// Request time synchronization from the Spark Cloud
-					Spark.syncTime();
+					//Spark.syncTime();
 					g_lastSync = millis();
 				}
 			}

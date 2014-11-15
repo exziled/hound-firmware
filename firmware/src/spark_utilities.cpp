@@ -364,26 +364,26 @@ void SparkClass::sleep(long seconds)
 
 void SparkClass::sleep(uint16_t wakeUpPin, uint16_t edgeTriggerMode)
 {
-  if ((wakeUpPin < TOTAL_PINS) && (edgeTriggerMode <= FALLING))
-  {
-    uint16_t BKP_DR9_Data = wakeUpPin;//set wakeup pin mumber
-    BKP_DR9_Data |= (edgeTriggerMode << 8);//set edge trigger mode
-    BKP_DR9_Data |= (0xA << 12);//set stop mode flag
+  // if ((wakeUpPin < TOTAL_PINS) && (edgeTriggerMode <= FALLING))
+  // {
+  //   uint16_t BKP_DR9_Data = wakeUpPin;//set wakeup pin mumber
+  //   BKP_DR9_Data |= (edgeTriggerMode << 8);//set edge trigger mode
+  //   BKP_DR9_Data |= (0xA << 12);//set stop mode flag
 
-    /*************************************************/
-    //BKP_DR9_Data: 0xAXXX
-    //                ||||
-    //                ||----- octet wakeUpPin number
-    //                |------ nibble edgeTriggerMode
-    //                ------- nibble stop mode flag
-    /*************************************************/
+  //   /*************************************************/
+  //   //BKP_DR9_Data: 0xAXXX
+  //   //                ||||
+  //   //                ||----- octet wakeUpPin number
+  //   //                |------ nibble edgeTriggerMode
+  //   //                ------- nibble stop mode flag
+  //   /*************************************************/
 
-    /* Execute Stop mode on next system reset */
-    BKP_WriteBackupRegister(BKP_DR9, BKP_DR9_Data);
+  //   /* Execute Stop mode on next system reset */
+  //   BKP_WriteBackupRegister(BKP_DR9, BKP_DR9_Data);
 
-    /* Reset System */
-    NVIC_SystemReset();
-  }
+  //   /* Reset System */
+  //   NVIC_SystemReset();
+  // }
 }
 
 void SparkClass::sleep(uint16_t wakeUpPin, uint16_t edgeTriggerMode, long seconds)
@@ -404,63 +404,63 @@ void Enter_STOP_Mode(void)
   if((BKP_ReadBackupRegister(BKP_DR9) >> 12) == 0xA)
   {
     uint16_t wakeUpPin = BKP_ReadBackupRegister(BKP_DR9) & 0xFF;
-    InterruptMode edgeTriggerMode = (InterruptMode)((BKP_ReadBackupRegister(BKP_DR9) >> 8) & 0x0F);
+    // InterruptMode edgeTriggerMode = (InterruptMode)((BKP_ReadBackupRegister(BKP_DR9) >> 8) & 0x0F);
 
     /* Clear Stop mode system flag */
     BKP_WriteBackupRegister(BKP_DR9, 0xFFFF);
 
-    if ((wakeUpPin < TOTAL_PINS) && (edgeTriggerMode <= FALLING))
-    {
-      PinMode wakeUpPinMode = INPUT;
+    // if ((wakeUpPin < TOTAL_PINS) && (edgeTriggerMode <= FALLING))
+    // {
+    //   PinMode wakeUpPinMode = INPUT;
 
-      /* Set required pinMode based on edgeTriggerMode */
-      switch(edgeTriggerMode)
-      {
-        case CHANGE:
-          wakeUpPinMode = INPUT;
-          break;
+    //   /* Set required pinMode based on edgeTriggerMode */
+    //   switch(edgeTriggerMode)
+    //   {
+    //     case CHANGE:
+    //       wakeUpPinMode = INPUT;
+    //       break;
 
-        case RISING:
-          wakeUpPinMode = INPUT_PULLDOWN;
-          break;
+    //     case RISING:
+    //       wakeUpPinMode = INPUT_PULLDOWN;
+    //       break;
 
-        case FALLING:
-          wakeUpPinMode = INPUT_PULLUP;
-          break;
-      }
-      pinMode(wakeUpPin, wakeUpPinMode);
+    //     case FALLING:
+    //       wakeUpPinMode = INPUT_PULLUP;
+    //       break;
+    //   }
+    //   pinMode(wakeUpPin, wakeUpPinMode);
 
-      /* Configure EXTI Interrupt : wake-up from stop mode using pin interrupt */
-      attachInterrupt(wakeUpPin, NULL, edgeTriggerMode);
+    //   /* Configure EXTI Interrupt : wake-up from stop mode using pin interrupt */
+    //   attachInterrupt(wakeUpPin, NULL, edgeTriggerMode);
 
-      /* Request to enter STOP mode with regulator in low power mode */
-      PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
+    //   /* Request to enter STOP mode with regulator in low power mode */
+    //   PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
 
-      /* At this stage the system has resumed from STOP mode */
-      /* Enable HSE, PLL and select PLL as system clock source after wake-up from STOP */
+    //   /* At this stage the system has resumed from STOP mode */
+    //   /* Enable HSE, PLL and select PLL as system clock source after wake-up from STOP */
 
-      /* Enable HSE */
-      RCC_HSEConfig(RCC_HSE_ON);
+    //   /* Enable HSE */
+    //   RCC_HSEConfig(RCC_HSE_ON);
 
-      /* Wait till HSE is ready */
-      if(RCC_WaitForHSEStartUp() != SUCCESS)
-      {
-        /* If HSE startup fails try to recover by system reset */
-        NVIC_SystemReset();
-      }
+    //   /* Wait till HSE is ready */
+    //   if(RCC_WaitForHSEStartUp() != SUCCESS)
+    //   {
+    //     /* If HSE startup fails try to recover by system reset */
+    //     NVIC_SystemReset();
+    //   }
 
-      /* Enable PLL */
-      RCC_PLLCmd(ENABLE);
+    //   /* Enable PLL */
+    //   RCC_PLLCmd(ENABLE);
 
-      /* Wait till PLL is ready */
-      while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET);
+    //   /* Wait till PLL is ready */
+    //   while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET);
 
-      /* Select PLL as system clock source */
-      RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
+    //   /* Select PLL as system clock source */
+    //   RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
 
-      /* Wait till PLL is used as system clock source */
-      while(RCC_GetSYSCLKSource() != 0x08);
-    }
+    //   /* Wait till PLL is used as system clock source */
+    //   while(RCC_GetSYSCLKSource() != 0x08);
+    // }
   }
 }
 

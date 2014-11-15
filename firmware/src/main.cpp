@@ -32,8 +32,6 @@
 #include "spark_utilities.h"
 
 #include "stm32_it.h"
-#include "cloud_dfu.h"
-#include "tc74.h"
 #include "websocket.h"
 #include "com_proto.h"
 #include "com_command.h"

@@ -24,10 +24,10 @@
  */
 
 #include "spark_wiring.h"
-#include "spark_wiring_interrupts.h"
+// #include "spark_wiring_interrupts.h"
 #include "spark_wiring_usartserial.h"
-#include "spark_wiring_spi.h"
-#include "spark_wiring_i2c.h"
+// #include "spark_wiring_spi.h"
+// #include "spark_wiring_i2c.h"
 
 /*
  * Globals
@@ -89,17 +89,6 @@ void pinMode(uint16_t pin, PinMode setMode)
 		return;
 	}
 
-	// SPI safety check
-	if (SPI.isEnabled() == true && (pin == SCK || pin == MOSI || pin == MISO))
-	{
-		return;
-	}
-
-	// I2C safety check
-	if (Wire.isEnabled() == true && (pin == SCL || pin == SDA))
-	{
-		return;
-	}
 
 	// Serial1 safety check
 	if (Serial1.isEnabled() == true && (pin == RX || pin == TX))
@@ -183,18 +172,6 @@ void digitalWrite(uint16_t pin, uint8_t value)
 		return;
 	}
 
-	// SPI safety check
-	if (SPI.isEnabled() == true && (pin == SCK || pin == MOSI || pin == MISO))
-	{
-		return;
-	}
-
-	// I2C safety check
-	if (Wire.isEnabled() == true && (pin == SCL || pin == SDA))
-	{
-		return;
-	}
-
 	// Serial1 safety check
 	if (Serial1.isEnabled() == true && (pin == RX || pin == TX))
 	{
@@ -223,18 +200,6 @@ int32_t digitalRead(uint16_t pin)
 {
 	if (pin >= TOTAL_PINS || PIN_MAP[pin].pin_mode == NONE
 	|| PIN_MAP[pin].pin_mode == AF_OUTPUT_PUSHPULL || PIN_MAP[pin].pin_mode == AF_OUTPUT_DRAIN)
-	{
-		return LOW;
-	}
-
-	// SPI safety check
-	if (SPI.isEnabled() == true && (pin == SCK || pin == MOSI || pin == MISO))
-	{
-		return LOW;
-	}
-
-	// I2C safety check
-	if (Wire.isEnabled() == true && (pin == SCL || pin == SDA))
 	{
 		return LOW;
 	}
@@ -388,18 +353,6 @@ int32_t analogRead(uint16_t pin)
 		pin = pin + FIRST_ANALOG_PIN;
 	}
 
-	// SPI safety check
-	if (SPI.isEnabled() == true && (pin == SCK || pin == MOSI || pin == MISO))
-	{
-		return LOW;
-	}
-
-	// I2C safety check
-	if (Wire.isEnabled() == true && (pin == SCL || pin == SDA))
-	{
-		return LOW;
-	}
-
 	// Serial1 safety check
 	if (Serial1.isEnabled() == true && (pin == RX || pin == TX))
 	{
@@ -501,17 +454,6 @@ void analogWrite(uint16_t pin, uint8_t value)
 		return;
 	}
 
-	// SPI safety check
-	if (SPI.isEnabled() == true && (pin == SCK || pin == MOSI || pin == MISO))
-	{
-		return;
-	}
-
-	// I2C safety check
-	if (Wire.isEnabled() == true && (pin == SCL || pin == SDA))
-	{
-		return;
-	}
 
 	// Serial1 safety check
 	if (Serial1.isEnabled() == true && (pin == RX || pin == TX))

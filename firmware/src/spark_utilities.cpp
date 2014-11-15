@@ -60,30 +60,6 @@ struct User_Var_Lookup_Table_t
 	Spark_Data_TypeDef userVarType;
 } User_Var_Lookup_Table[USER_VAR_MAX_COUNT];
 
-struct User_Func_Lookup_Table_t
-{
-	int (*pUserFunc)(String userArg);
-	char userFuncKey[USER_FUNC_KEY_LENGTH];
-	char userFuncArg[USER_FUNC_ARG_LENGTH];
-	int userFuncRet;
-	bool userFuncSchedule;
-} User_Func_Lookup_Table[USER_FUNC_MAX_COUNT];
-
-/*
-static unsigned char uitoa(unsigned int cNum, char *cString);
-static unsigned int atoui(char *cString);
-static uint8_t atoc(char data);
-*/
-
-/*
-static uint16_t atoshort(char b1, char b2);
-static unsigned char ascii_to_char(char b1, char b2);
-
-static void str_cpy(char dest[], char src[]);
-static int str_cmp(char str1[], char str2[]);
-static int str_len(char str[]);
-static void sub_str(char dest[], char src[], int offset, int len);
-*/
 
 SystemClass System;
 RGBClass RGB;
@@ -365,13 +341,6 @@ int numUserFunctions(void)
   return User_Func_Count;
 }
 
-void copyUserFunctionKey(char *destination, int function_index)
-{
-  memcpy(destination,
-         User_Func_Lookup_Table[function_index].userFuncKey,
-         USER_FUNC_KEY_LENGTH);
-}
-
 int numUserVariables(void)
 {
   return User_Var_Count;
@@ -423,8 +392,6 @@ void Spark_Protocol_Init(void)
 
     SparkDescriptor descriptor;
     descriptor.num_functions = numUserFunctions;
-    descriptor.copy_function_key = copyUserFunctionKey;
-    descriptor.call_function = userFuncSchedule;
     descriptor.num_variables = numUserVariables;
     descriptor.copy_variable_key = copyUserVariableKey;
     descriptor.variable_type = wrapVarTypeInEnum;
@@ -710,26 +677,6 @@ void *getUserVar(const char *varKey)
 		}
 	}
 	return NULL;
-}
-
-int userFuncSchedule(const char *funcKey, const char *paramString)
-{
-	String pString(paramString);
-	int i = 0;
-	for(i = 0; i < User_Func_Count; i++)
-	{
-		if(NULL != paramString && (0 == strncmp(User_Func_Lookup_Table[i].userFuncKey, funcKey, USER_FUNC_KEY_LENGTH)))
-		{
-			size_t paramLength = strlen(paramString);
-			if(paramLength > USER_FUNC_ARG_LENGTH)
-				paramLength = USER_FUNC_ARG_LENGTH;
-			memcpy(User_Func_Lookup_Table[i].userFuncArg, paramString, paramLength);
-			User_Func_Lookup_Table[i].userFuncSchedule = true;
-			//return User_Func_Lookup_Table[i].pUserFunc(User_Func_Lookup_Table[i].userFuncArg);
-			return User_Func_Lookup_Table[i].pUserFunc(pString);
-		}
-	}
-	return -1;
 }
 
 long socket_connect(long sd, const sockaddr *addr, long addrlen)

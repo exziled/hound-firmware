@@ -28,7 +28,7 @@
 #define __SPARK_UTILITIES_H
 
 #include "main.h"
-#include "spark_wiring_string.h"
+//#include "spark_wiring_string.h"
 #include "spark_wiring_time.h"
 
 #include "spark_protocol.h"
@@ -132,7 +132,6 @@ void Spark_SetTime(unsigned long dateTime);
 
 int userVarType(const char *varKey);
 void *getUserVar(const char *varKey);
-int userFuncSchedule(const char *funcKey, const char *paramString);
 
 long socket_connect(long sd, const sockaddr *addr, long addrlen);
 

@@ -326,20 +326,4 @@ void TimeClass::setTime(time_t t)
   }
 }
 
-/* return string representation of the current time */
-String TimeClass::timeStr()
-{
-	return timeStr(now());
-}
-
-/* return string representation for the given time */
-String TimeClass::timeStr(time_t t)
-{
-	struct tm *calendar_time;
-	t += time_zone_cache;
-	calendar_time = localtime(&t);
-	String calendar_time_string = String(asctime(calendar_time));
-	return calendar_time_string;
-}
-
 TimeClass Time;

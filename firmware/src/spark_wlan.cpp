@@ -22,10 +22,10 @@
   License along with this library; if not, see <http://www.gnu.org/licenses/>.
   ******************************************************************************
  */
+#include "spark_wiring.h"
 #include "spark_wlan.h"
 #include "spark_macros.h"
 #include "string.h"
-#include "wifi_credentials_reader.h"
 
 //#define DEBUG_WIFI    // Define to show all the flags in debug output
 //#define DEBUG_WAN_WD  // Define to show all SW WD activity in debug output
@@ -203,7 +203,7 @@ void Start_Smart_Config(void)
 	/* Start the SmartConfig start process */
 	wlan_smart_config_start(1);
 
-	WiFiCredentialsReader wifi_creds_reader(wifi_add_profile_callback);
+	//WiFiCredentialsReader wifi_creds_reader(wifi_add_profile_callback);
 
 	/* Wait for SmartConfig/SerialConfig to finish */
 	while (WiFi.listening())
@@ -223,7 +223,7 @@ void Start_Smart_Config(void)
 		{
 			LED_Toggle(LED_RGB);
 			Delay(250);
-			wifi_creds_reader.read();
+			//wifi_creds_reader.read();
 		}
 	}
 

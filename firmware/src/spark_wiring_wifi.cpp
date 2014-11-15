@@ -31,21 +31,6 @@ uint8_t* WiFiClass::macAddress(uint8_t* mac)
         return mac;
 }
 
-IPAddress WiFiClass::localIP()
-{
-        return IPAddress(ip_config.aucIP[3], ip_config.aucIP[2], ip_config.aucIP[1], ip_config.aucIP[0]);
-}
-
-IPAddress WiFiClass::subnetMask()
-{
-        return IPAddress(ip_config.aucSubnetMask[3], ip_config.aucSubnetMask[2], ip_config.aucSubnetMask[1], ip_config.aucSubnetMask[0]);
-}
-
-IPAddress WiFiClass::gatewayIP()
-{
-        return IPAddress(ip_config.aucDefaultGateway[3], ip_config.aucDefaultGateway[2], ip_config.aucDefaultGateway[1], ip_config.aucDefaultGateway[0]);
-}
-
 char* WiFiClass::SSID()
 {
         return (char *)ip_config.uaSSID;
@@ -108,30 +93,6 @@ int8_t WiFiClass::RSSI()
  TI, no changes need to be made to this function, as it would be implemented
  the same way.
  *****************************************************************************/
-
-uint32_t WiFiClass::ping(IPAddress remoteIP)
-{
-  return ping(remoteIP, 5);
-}
-
-uint32_t WiFiClass::ping(IPAddress remoteIP, uint8_t nTries)
-{
-  uint32_t result = 0;
-  uint32_t pingIPAddr = remoteIP[3] << 24 | remoteIP[2] << 16 | remoteIP[1] << 8 | remoteIP[0];
-  unsigned long pingSize = 32UL;
-  unsigned long pingTimeout = 500UL; // in milliseconds
-
-  memset(&ping_report,0,sizeof(netapp_pingreport_args_t));
-  ping_report_num = 0;
-
-  long psend = netapp_ping_send(&pingIPAddr, (unsigned long)nTries, pingSize, pingTimeout);
-  unsigned long lastTime = millis();
-  while( ping_report_num==0 && (millis() < lastTime+2*nTries*pingTimeout)) {}
-  if (psend==0L && ping_report_num) {
-    result = ping_report.packets_received;
-  }
-  return result;
-}
 
 void WiFiClass::connect(void)
 {

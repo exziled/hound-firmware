@@ -42,13 +42,8 @@ public:
 	~WiFiClass() {}
 
         uint8_t* macAddress(uint8_t* mac);
-        IPAddress localIP();
-        IPAddress subnetMask();
-        IPAddress gatewayIP();
         char* SSID();
         int8_t RSSI();
-        uint32_t ping(IPAddress remoteIP);
-        uint32_t ping(IPAddress remoteIP, uint8_t nTries);
 
         static void connect(void);
         static void disconnect(void);

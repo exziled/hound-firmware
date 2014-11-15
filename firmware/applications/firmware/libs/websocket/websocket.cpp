@@ -4,7 +4,8 @@
 #include <string.h>
 
 #include "hound_debug.h"
-#include "application.h"
+#include "spark_wlan.h"
+#include "spark_macros.h"
 
 /**
  * Contructor

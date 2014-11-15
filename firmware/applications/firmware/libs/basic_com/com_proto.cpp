@@ -3,9 +3,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "application.h"
-
 #include "hound_debug.h"
+#include "spark_wlan.h"
+#include "spark_macros.h"
 
 
 // G++ doesn't like constant strings

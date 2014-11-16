@@ -42,6 +42,8 @@
 #include "hound_identity.h"
 #include "watchdog.h"
 
+#include "heartbeat.h"
+
 extern "C" {
 #include "usb_conf.h"
 #include "usb_lib.h"
@@ -233,6 +235,8 @@ int main(void)
 	// Identity Storage
 	HoundIdentity * g_Identity = NULL;
 
+	// Setup Heartbeat LED
+	heartbeat_initialize(HEARTBEAT_PORT, HEARTBEAT_PIN);
 
 	// LCD Setup
 	LCDPinConfig_t pinConfig;
@@ -334,7 +338,7 @@ int main(void)
 						lcd->printf("I Failed %d", count++);
 					}
 
-					//digitalWrite(g_heartbeatLED, !digitalRead(g_heartbeatLED));
+					heartbeat_beat(HEARTBEAT_PORT, HEARTBEAT_PIN);
 					g_lastBeat = millis();
 				}
 

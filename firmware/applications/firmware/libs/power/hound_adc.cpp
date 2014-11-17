@@ -88,7 +88,7 @@ void initTIM3(void)
 
     timeInit.TIM_Prescaler = 3;
     timeInit.TIM_CounterMode = TIM_CounterMode_Up;
-    timeInit.TIM_Period = 749;
+    timeInit.TIM_Period = 1498;
     timeInit.TIM_ClockDivision = TIM_CKD_DIV1;
     timeInit.TIM_RepetitionCounter = 0;
 
@@ -108,6 +108,7 @@ extern "C" void TIM3_IRQHandler()
     if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
     {
         TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+
 
         // No sample configuration, something's very wrong
         if (g_sConfig == NULL)
@@ -201,7 +202,7 @@ extern "C" void TIM3_IRQHandler()
                 rmsValues->apparent = fixed_mul(rmsValues->voltage, rmsValues->current);
 
                 fixed_t fixed_scale = fixed(1);
-                fixed_scale = fixed_div(fixed_scale, 21000);
+                fixed_scale = fixed_div(fixed_scale, 12000);
 
                 fixed_t sum = 0;
 

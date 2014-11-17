@@ -7,6 +7,8 @@
 
 #include "hound_debug.h"
 
+#include "socket_control.h"
+
 // G++ doesn't like constant strings
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
@@ -19,52 +21,28 @@
 // 16     12     8          1
 // | ---- | ---- | -------- |
 //   port   pin    operation 
+
+// 8 bits
+// 8      4      1
+// | ---- | ---- | 
+//  socket   op
 // EX:
 // Data 0xA401
 // Performs Operation (0x01) on Port A, Pin 4
-int Communication::parseCommand(Communication::hCommand_t * arrCommands, int count, char * strResponse, int responseBuffSize, uint8_t reference)
+int Communication::parseCommand(uint8_t * arrCommands, int count, char * strResponse, int responseBuffSize, uint8_t reference)
 {
-	char portTemp;
 	int replySize = 0;
-	uint16_t pin, op; 	// Conform to stm32f std lib
-	GPIO_TypeDef* port = NULL;
-	Communication::hCommand_t * command = NULL;
+	uint8_t sock, op, command; 	// Conform to stm32f std lib
 
 	replySize += snprintf(strResponse, responseBuffSize, "{\"e\":%d ,\"result\": [", reference);
 
 	for (int i = 0; i < count; i++)
 	{
-		command = &arrCommands[i];
-		// Parse values out of binary stream
-		pin = 1 << (command->cPin & 0x0F);
-		portTemp = 0x0F & (command->cPin >> 4);
-		op = 0xFF & command->cOp;
+		command = arrCommands[i];
 
-		// Determine port for command
-		switch (portTemp)
-		{
-			case 0xA:
-				port = GPIOA;		
-				break;
-			case 0xB:
-				port = GPIOB;
-				break;
-			case 0xC:
-				port = GPIOC;
-				break;
-			case 0xD:
-				port = GPIOD;
-				break;
-			case 0xE:
-				port = GPIOE;
-				break;
-			case 0xF:
-				port = GPIOF;
-				break;
-			default:
-				port = GPIOB;
-				break;
-		}
+		// Parse values out of binary stream
+		sock = (command >> 4) & 0x0F;
+		op = command & 0x0F;
 		
 		#ifdef DEBUG_ON
 		HoundDebug::logMessage(op, "Command");
@@ -72,20 +50,20 @@ int Communication::parseCommand(Communication::hCommand_t * arrCommands, int cou
 
 		if (op == 0)
 		{
-			GPIO_ResetBits(port, pin);
+			socketSetState(sock, 0);
 
-			replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "{\"socket\": \"%X\", \"state\": 0 }," , command->cPin);
+			replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "{\"socket\": \"%X\", \"state\": 0 }," , sock);
 		} else if (op == 1) {
-			GPIO_SetBits(port, pin);
+			socketSetState(sock, 1);
 
-			replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "{\"socket\": \"%X\", \"state\": 1 }," , command->cPin);
+			replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "{\"socket\": \"%X\", \"state\": 1 }," , sock);
 		} else if (op == 2) {
-			portTemp = GPIO_ReadInputDataBit(port, pin);
-			if (portTemp)
+
+			if (socketGetState(sock))
 			{
-				replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "{\"socket\": \"%X\", \"state\": 1 }," , command->cPin);
+				replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "{\"socket\": \"%X\", \"state\": 1 }," , sock);
 			} else  {
-				replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "{\"socket\": \"%X\", \"state\": 0 }," , command->cPin);
+				replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "{\"socket\": \"%X\", \"state\": 0 }," , sock);
 			}
 		}
 	}
@@ -166,6 +144,16 @@ int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strRe
 			for (i = 0; i < dataCount; i++)
 			{
 				replySize += Communication::strcat(strResponse + replySize, responseBuffSize - replySize, rmsAggregation->getAt(i)->apparent, i != (dataCount - 1) ? ',' : '\0');
+			}
+			replySize += Communication::strcat(strResponse + replySize, responseBuffSize - replySize, (char *)"],\0");
+		}
+
+		if (request->rParam & Communication::REQ_A)
+		{
+			replySize += Communication::strcat(strResponse + replySize, responseBuffSize - replySize, (char *)"\"real\":[\0");
+			for (i = 0; i < dataCount; i++)
+			{
+				replySize += Communication::strcat(strResponse + replySize, responseBuffSize - replySize, rmsAggregation->getAt(i)->real, i != (dataCount - 1) ? ',' : '\0');
 			}
 			replySize += Communication::strcat(strResponse + replySize, responseBuffSize - replySize, (char *)"],\0");
 		}

@@ -42,6 +42,8 @@
 #include "hound_identity.h"
 #include "watchdog.h"
 
+#include "socket_control.h"
+
 #include "heartbeat.h"
 
 extern "C" {
@@ -273,7 +275,6 @@ int main(void)
 
 		if (WLAN_DHCP && !setup_complete)
 		{
-
 			Spark_Disconnect();
 
 			g_Identity = new HoundIdentity;
@@ -284,6 +285,9 @@ int main(void)
 
 			// pinMode(g_socketOne, OUTPUT);
 			// pinMode(g_socketTwo, OUTPUT);
+
+			initializeSocket(0);
+			initializeSocket(1);
 
 			com_demo = new Communication::HoundProto(9080);
 
@@ -372,7 +376,7 @@ int main(void)
 						else if (operation & 0x01)
 						{
 							// Process Socket Operation
-							buffSendSize = Communication::parseCommand((Communication::hCommand_t *)(pComBuff + 2), (ret-2) / sizeof(Communication::hCommand_t), (char *)sComBuff, COM_BUFFSIZE, reference);
+							buffSendSize = Communication::parseCommand((uint8_t *)(pComBuff + 2), (ret-2) / sizeof(uint8_t), (char *)sComBuff, COM_BUFFSIZE, reference);
 
 							// Server Reply
 							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);

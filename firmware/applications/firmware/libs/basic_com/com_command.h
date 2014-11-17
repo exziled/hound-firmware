@@ -6,16 +6,10 @@
 #include "stm32f10x_gpio.h"
 #include "hound_rms_fixed.h"
 #include "hound_identity.h"
+#include "socket_control.h"
 
 namespace Communication
 {
-
-	typedef struct 
-	{
-		uint8_t cPin;
-		uint8_t cOp;
-	} hCommand_t;
-
 	typedef struct
 	{
 		uint8_t rNode;
@@ -25,7 +19,7 @@ namespace Communication
 	enum reqParameters {REQ_V = 0x8, REQ_I = 0x4, REQ_A = 0x2};
 
 	// Functions
-	int parseCommand(hCommand_t * arrCommands, int count, char * strResponse, int responseBuffSize, uint8_t reference);
+	int parseCommand(uint8_t * arrCommands, int count, char * strResponse, int responseBuffSize, uint8_t reference);
 	int parseRequest(hRequest_t * arrRequest, int count, char * strResponse, int responseBuffSize, AggregatedRMS * rmsAggregation, HoundIdentity * identity);
 
 	int strcat(char * strDest, uint16_t buffSize, char * strSrc);

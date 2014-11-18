@@ -41,6 +41,7 @@
 #include "hound_debug.h"
 #include "hound_identity.h"
 #include "watchdog.h"
+#include "hound_time.h"
 
 #include "socket_control.h"
 
@@ -280,12 +281,6 @@ int main(void)
 			g_Identity = new HoundIdentity;
 			g_Identity->retrieveIdentity();
 
-			// pinMode(g_heartbeatLED, OUTPUT);
-			// pinMode(g_subscriptionLED, OUTPUT);
-
-			// pinMode(g_socketOne, OUTPUT);
-			// pinMode(g_socketTwo, OUTPUT);
-
 			initializeSocket(0);
 			initializeSocket(1);
 
@@ -315,6 +310,21 @@ int main(void)
 
 		    initADCSPI();
 
+		    // Update RealTime Clock
+			ret = generateNTPRequest(pComBuff, COM_BUFFSIZE);
+
+			if (ret > 0)
+			{
+				ret = sendNTPRequest(pComBuff, ret);
+
+				if (ret > 0)
+				{
+					parseNTPResponse(pComBuff, ret);
+				} else {
+					LED_SetRGBColor(RGB_COLOR_RED);
+				}
+			}
+			
 			setup_complete = 1;
 
 			lcd->clear();

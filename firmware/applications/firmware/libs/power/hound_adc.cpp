@@ -214,7 +214,7 @@ extern "C" void TIM3_IRQHandler()
 
                 rmsValues->real = fixed_mul(sum, 60);
                 rmsValues->real = fixed_mul(fixed(100*10), rmsValues->real);
-                if ((int16_t)rmsValues->real < 0)
+                if ((int32_t)rmsValues->real < 0)
                 {
                     rmsValues->real = 0;
                 }

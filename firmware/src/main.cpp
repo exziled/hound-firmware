@@ -136,23 +136,6 @@ extern "C" void SparkCoreConfig(void)
         LED_On(LED_RGB);
         SPARK_LED_FADE = 1;
 
-// #ifdef IWDG_RESET_ENABLE
-// 	// ToDo this needs rework for new bootloader
-// 	/* Check if the system has resumed from IWDG reset */
-// 	if (RCC_GetFlagStatus(RCC_FLAG_IWDGRST) != RESET)
-// 	{
-// 		/* IWDGRST flag set */
-// 		IWDG_SYSTEM_RESET = 1;
-
-// 		/* Clear reset flags */
-// 		RCC_ClearFlag();
-// 	}
-
-// 	/* We are duplicating the IWDG call here for compatibility with old bootloader */
-// 	/* Set IWDG Timeout to 3 secs */
-// 	IWDG_Reset_Enable(3 * TIMING_IWDG_RELOAD);
-// #endif
-
 #ifdef DFU_BUILD_ENABLE
 	Load_SystemFlags();
 #endif
@@ -160,14 +143,6 @@ extern "C" void SparkCoreConfig(void)
 #ifdef SPARK_SFLASH_ENABLE
 	sFLASH_Init();
 #endif
-
-//#ifdef SPARK_WLAN_ENABLE
-	/* Start Spark Wlan and connect to Wifi Router by default */
-	SPARK_WLAN_SETUP = 1;
-
-	/* Connect to Spark Cloud by default */
-	//SPARK_CLOUD_CONNECT = 1;
-//#endif
 }
 
 /* Main Loop Counter Defines */
@@ -183,11 +158,6 @@ extern "C" void SparkCoreConfig(void)
 #define SAMPLE_INTERVAL 2
 
 #define delayms delay
-#define g_heartbeatLED D7
-#define g_subscriptionLED D3
-
-#define g_socketOne A6
-#define g_socketTwo A7
 
 #define COM_BUFFSIZE 300
 
@@ -258,15 +228,11 @@ int main(void)
 	pinConfig.portData2 = GPIOA;
 	pinConfig.pinData2 = GPIO_Pin_15;
 	pinConfig.portData3 = GPIOA;
-	pinConfig.pinData3 = GPIO_Pin_14;
+	pinConfig.pinData3 = GPIO_Pin_1W4;
 	HD44780 * lcd = HD44780::getInstance(&pinConfig);
 
 	// Enable CC3000 SPI Connection
 	uint8_t setup_complete = 0;
-	// if (SPARK_WLAN_SETUP)
-	// {
-	// 	SPARK_WLAN_Setup(Multicast_Presence_Announcement);
-	// }
 
 	WLAN_Off();
 	WLAN_Initialize();
@@ -277,17 +243,12 @@ int main(void)
   	/* Main loop */
 	while (1)
 	{
-		// if (WLAN_GetStatus())
-		// {
-		// 	WLAN_KeepAlive_Loop();
-		// }
-		// if(SPARK_WLAN_SETUP)
-		// {
-  // 			//SPARK_WLAN_Loop();
-		// }
+		if (WLAN_GetStatus())
+		{
+			WLAN_KeepAlive_Loop();
+		}
 
 		if (WLAN_GetStatus() && !setup_complete)
-		//if (WLAN_DHCP && !setup_complete)
 		{
 			//Spark_Disconnect();
 
@@ -343,8 +304,7 @@ int main(void)
 			lcd->printf("Setup Complete");
 		}
 
-		//if(WLAN_GetStatus() && setup_complete)
-		if (setup_complete);
+		if(WLAN_GetStatus() && setup_complete)
 		{
 			if(1)
 			{
@@ -574,55 +534,6 @@ void Timing_Decrement(void)
 		else
 			TimingLED = 100;	//100ms
 	}
-
-#ifdef SPARK_WLAN_ENABLE
-	if(!SPARK_WLAN_SETUP || SPARK_WLAN_SLEEP)
-	{
-		//Do nothing
-	}
-	else if(SPARK_FLASH_UPDATE)
-	{
-		if (TimingFlashUpdateTimeout >= TIMING_FLASH_UPDATE_TIMEOUT)
-		{
-			//Reset is the only way now to recover from stuck OTA update
-			NVIC_SystemReset();
-		}
-		else
-		{
-			TimingFlashUpdateTimeout++;
-		}
-	}
-	else if(!WLAN_SMART_CONFIG_START && BUTTON_GetDebouncedTime(BUTTON1) >= 3000)
-	{
-		BUTTON_ResetDebouncedState(BUTTON1);
-
-		if(!SPARK_WLAN_SLEEP)
-		{
-			WiFi.listen();
-		}
-	}
-	else if(BUTTON_GetDebouncedTime(BUTTON1) >= 7000)
-	{
-		BUTTON_ResetDebouncedState(BUTTON1);
-
-		WLAN_DELETE_PROFILES = 1;
-	}
-#endif
-
-// #ifdef IWDG_RESET_ENABLE
-// 	if (TimingIWDGReload >= TIMING_IWDG_RELOAD)
-// 	{
-// 		TimingIWDGReload = 0;
-
-// 		 Reload WDG counter 
-// 		KICK_WDT();
-// 		DECLARE_SYS_HEALTH(0xFFFF);
-// 	}
-// 	else
-// 	{
-// 		TimingIWDGReload++;
-// 	}
-// #endif
 }
 
 /*******************************************************************************

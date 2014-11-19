@@ -27,6 +27,8 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
+#undef SPARK_WLAN_ENABLE
+
 extern "C" {
 
 /* Includes ------------------------------------------------------------------*/

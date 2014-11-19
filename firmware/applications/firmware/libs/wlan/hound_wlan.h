@@ -29,6 +29,12 @@ void WLAN_KeepAlive_Loop(void);
 
 void WLAN_SmartConfigHandler(void);
 
+char *WLAN_Firmware_Patch(unsigned long *length);
+char *WLAN_Driver_Patch(unsigned long *length);
+char *WLAN_BootLoader_Patch(unsigned long *length);
+void Set_NetApp_Timeout(void);
+uint32_t SPARK_WLAN_SetNetWatchDog(uint32_t timeOutInuS);
+
 // Get SSID
 // Get MAC
 

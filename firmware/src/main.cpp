@@ -25,11 +25,13 @@
   License along with this program; if not, see <http://www.gnu.org/licenses/>.
   ******************************************************************************
  */
-  
+
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "debug.h"
 #include "spark_utilities.h"
+
+#include "hound_wlan.h"
 
 #include "stm32_it.h"
 #include "websocket.h"
@@ -159,13 +161,13 @@ extern "C" void SparkCoreConfig(void)
 	sFLASH_Init();
 #endif
 
-#ifdef SPARK_WLAN_ENABLE
+//#ifdef SPARK_WLAN_ENABLE
 	/* Start Spark Wlan and connect to Wifi Router by default */
 	SPARK_WLAN_SETUP = 1;
 
 	/* Connect to Spark Cloud by default */
-	SPARK_CLOUD_CONNECT = 1;
-#endif
+	//SPARK_CLOUD_CONNECT = 1;
+//#endif
 }
 
 /* Main Loop Counter Defines */
@@ -261,22 +263,33 @@ int main(void)
 
 	// Enable CC3000 SPI Connection
 	uint8_t setup_complete = 0;
-	if (SPARK_WLAN_SETUP)
-	{
-		SPARK_WLAN_Setup(Multicast_Presence_Announcement);
-	}
+	// if (SPARK_WLAN_SETUP)
+	// {
+	// 	SPARK_WLAN_Setup(Multicast_Presence_Announcement);
+	// }
+
+	WLAN_Off();
+	WLAN_Initialize();
+	// WLAN_On();
+
+	WLAN_Connect();
 
   	/* Main loop */
 	while (1)
 	{
-		if(SPARK_WLAN_SETUP)
-		{
-  			SPARK_WLAN_Loop();
-		}
+		// if (WLAN_GetStatus())
+		// {
+		// 	WLAN_KeepAlive_Loop();
+		// }
+		// if(SPARK_WLAN_SETUP)
+		// {
+  // 			//SPARK_WLAN_Loop();
+		// }
 
-		if (WLAN_DHCP && !setup_complete)
+		if (WLAN_GetStatus() && !setup_complete)
+		//if (WLAN_DHCP && !setup_complete)
 		{
-			Spark_Disconnect();
+			//Spark_Disconnect();
 
 			g_Identity = new HoundIdentity;
 			g_Identity->retrieveIdentity();
@@ -310,20 +323,18 @@ int main(void)
 
 		    initADCSPI();
 
-		    // Update RealTime Clock
-			ret = generateNTPRequest(pComBuff, COM_BUFFSIZE);
+		 //    // Update RealTime Clock
+			// ret = generateNTPRequest(pComBuff, COM_BUFFSIZE);
 
-			if (ret > 0)
-			{
-				ret = sendNTPRequest(pComBuff, ret);
+			// if (ret > 0)
+			// {
+			// 	ret = sendNTPRequest(pComBuff, ret);
 
-				if (ret > 0)
-				{
-					parseNTPResponse(pComBuff, ret);
-				} else {
-					LED_SetRGBColor(RGB_COLOR_RED);
-				}
-			}
+			// 	if (ret > 0)
+			// 	{
+			// 		parseNTPResponse(pComBuff, ret);
+			// 	}
+			// }
 			
 			setup_complete = 1;
 
@@ -332,9 +343,10 @@ int main(void)
 			lcd->printf("Setup Complete");
 		}
 
-		if(!SPARK_WLAN_SETUP || SPARK_WLAN_SLEEP || !SPARK_CLOUD_CONNECT || SPARK_CLOUD_CONNECTED || SPARK_WIRING_APPLICATION)
+		//if(WLAN_GetStatus() && setup_complete)
+		if (setup_complete);
 		{
-			if(!SPARK_FLASH_UPDATE)
+			if(1)
 			{
 				static int count = 0;
 				static bool bBroacast = FALSE;
@@ -455,6 +467,8 @@ int main(void)
 
 				if (!bBroacast && millis() - g_startupMillis > STARTUP_BROADCAST_DELAY)
 				{
+					LED_SetRGBColor(RGB_COLOR_WHITE);
+
 					bBroacast = TRUE;
 					g_broadcastAddress.oct[0] = 224;
 				    g_broadcastAddress.oct[1] = 111;

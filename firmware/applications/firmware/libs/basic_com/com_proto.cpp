@@ -7,6 +7,8 @@
 #include "spark_wlan.h"
 #include "spark_macros.h"
 
+#include "rgbled.h"
+
 
 // G++ doesn't like constant strings
 #pragma GCC diagnostic ignored "-Wwrite-strings"
@@ -36,6 +38,7 @@ HoundProto::HoundProto(int listenPort)
     // Need to also destroy object gracefully if we couldn't open the socket
     if (m_sockHandle == -1)
     {
+        LED_SetRGBColor(RGB_COLOR_RED);
         #ifdef DEBUG_ON
     	HoundDebug::logError(LOG_LOCATION_LCD, -1, "Socket Creation");
         #endif
@@ -164,6 +167,7 @@ int HoundProto::sendData(uint8_t * sendBuffer, int bufferSize, ipAddr_t * ipAddr
     // Need to also destroy object gracefully if we couldn't open the socket
     if (sendSocket == -1)
     {
+
         #ifdef DEBUG_ON
         HoundDebug::logError(LOG_LOCATION_LCD, -1, "Socket Creation");
         #endif
@@ -206,6 +210,10 @@ int HoundProto::sendData(uint8_t * sendBuffer, int bufferSize, ipAddr_t * ipAddr
 
         if (ret <= 0)
         {
+            if (ret == -1)
+                LED_SetRGBColor(RGB_COLOR_RED);
+            else 
+                LED_SetRGBColor(RGB_COLOR_WHITE);
             #ifdef DEBUG_ON
             HoundDebug::logError(LOG_LOCATION_LCD, ret, "Send Error");
             #endif

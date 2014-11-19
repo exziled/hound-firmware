@@ -362,7 +362,7 @@ uint32_t SPARK_WLAN_SetNetWatchDog(uint32_t timeOutInMS)
 
 void SPARK_WLAN_Setup(void (*presence_announcement_callback)(void))
 {
-	announce_presence = presence_announcement_callback;
+	//announce_presence = presence_announcement_callback;
 
 	/* Initialize CC3000's CS, EN and INT pins to their default states */
 	CC3000_WIFI_Init();
@@ -422,18 +422,18 @@ void SPARK_WLAN_Loop(void)
     }
   }
 
-  if (WLAN_SMART_CONFIG_START)
-  {
-    Start_Smart_Config();
-  }
-  else if (WLAN_MANUAL_CONNECT && !WLAN_DHCP)
-  {
-    CLR_WLAN_WD();
-    WiFi.disconnect();
-    // Edit the below line before use
-    wlan_connect(WLAN_SEC_WPA2, _ssid, strlen(_ssid), NULL, (unsigned char*)_password, strlen(_password));
-    WLAN_MANUAL_CONNECT = 0;
-  }
+  // if (WLAN_SMART_CONFIG_START)
+  // {
+  //   Start_Smart_Config();
+  // }
+  // else if (WLAN_MANUAL_CONNECT && !WLAN_DHCP)
+  // {
+  //   CLR_WLAN_WD();
+  //   WiFi.disconnect();
+  //   // Edit the below line before use
+  //   wlan_connect(WLAN_SEC_WPA2, _ssid, strlen(_ssid), NULL, (unsigned char*)_password, strlen(_password));
+  //   WLAN_MANUAL_CONNECT = 0;
+  // }
 
   // Complete Smart Config Process:
   // 1. if smart config is done
@@ -466,131 +466,131 @@ void SPARK_WLAN_Loop(void)
     memset(&ip_config, 0, sizeof(tNetappIpconfigRetArgs));
   }
 
-  if (SPARK_CLOUD_CONNECT == 0)
-  {
-    if (SPARK_CLOUD_SOCKETED || SPARK_CLOUD_CONNECTED)
-    {
-      Spark_Disconnect();
+  // if (SPARK_CLOUD_CONNECT == 0)
+  // {
+  //   if (SPARK_CLOUD_SOCKETED || SPARK_CLOUD_CONNECTED)
+  //   {
+  //     Spark_Disconnect();
 
-      SPARK_FLASH_UPDATE = 0;
-      SPARK_CLOUD_CONNECTED = 0;
-      SPARK_CLOUD_SOCKETED = 0;
+  //     SPARK_FLASH_UPDATE = 0;
+  //     SPARK_CLOUD_CONNECTED = 0;
+  //     SPARK_CLOUD_SOCKETED = 0;
 
-      if(!WLAN_DISCONNECT)
-      {
-        LED_SetRGBColor(RGB_COLOR_GREEN);
-        LED_On(LED_RGB);
-      }
-    }
+  //     if(!WLAN_DISCONNECT)
+  //     {
+  //       LED_SetRGBColor(RGB_COLOR_GREEN);
+  //       LED_On(LED_RGB);
+  //     }
+  //   }
 
-    return;
-  }
+  //   return;
+  // }
 
-  if (WLAN_DHCP && !SPARK_WLAN_SLEEP && !SPARK_CLOUD_SOCKETED)
-  {
-    if (Spark_Error_Count)
-    {
-      LED_SetRGBColor(RGB_COLOR_RED);
+  // if (WLAN_DHCP && !SPARK_WLAN_SLEEP && !SPARK_CLOUD_SOCKETED)
+  // {
+  //   if (Spark_Error_Count)
+  //   {
+  //     LED_SetRGBColor(RGB_COLOR_RED);
 
-      while (Spark_Error_Count != 0)
-      {
-        LED_On(LED_RGB);
-        Delay(500);
-        LED_Off(LED_RGB);
-        Delay(500);
-        Spark_Error_Count--;
-      }
+  //     while (Spark_Error_Count != 0)
+  //     {
+  //       LED_On(LED_RGB);
+  //       Delay(500);
+  //       LED_Off(LED_RGB);
+  //       Delay(500);
+  //       Spark_Error_Count--;
+  //     }
 
-      // TODO Send the Error Count to Cloud: NVMEM_Spark_File_Data[ERROR_COUNT_FILE_OFFSET]
+  //     // TODO Send the Error Count to Cloud: NVMEM_Spark_File_Data[ERROR_COUNT_FILE_OFFSET]
 
-      // Reset Error Count
-      NVMEM_Spark_File_Data[ERROR_COUNT_FILE_OFFSET] = 0;
-      nvmem_write(NVMEM_SPARK_FILE_ID, 1, ERROR_COUNT_FILE_OFFSET, &NVMEM_Spark_File_Data[ERROR_COUNT_FILE_OFFSET]);
-    }
+  //     // Reset Error Count
+  //     NVMEM_Spark_File_Data[ERROR_COUNT_FILE_OFFSET] = 0;
+  //     nvmem_write(NVMEM_SPARK_FILE_ID, 1, ERROR_COUNT_FILE_OFFSET, &NVMEM_Spark_File_Data[ERROR_COUNT_FILE_OFFSET]);
+  //   }
 
-    SPARK_LED_FADE = 0;
-    LED_SetRGBColor(RGB_COLOR_CYAN);
-    LED_On(LED_RGB);
+  //   SPARK_LED_FADE = 0;
+  //   LED_SetRGBColor(RGB_COLOR_CYAN);
+  //   LED_On(LED_RGB);
 
-    if (Spark_Connect() >= 0)
-    {
-      cfod_count  = 0;
-      SPARK_CLOUD_SOCKETED = 1;
-    }
-    else
-    {
-      if (SPARK_WLAN_RESET)
-      {
-        return;
-      }
+  //   if (Spark_Connect() >= 0)
+  //   {
+  //     cfod_count  = 0;
+  //     SPARK_CLOUD_SOCKETED = 1;
+  //   }
+  //   else
+  //   {
+  //     if (SPARK_WLAN_RESET)
+  //     {
+  //       return;
+  //     }
 
-      if ((cfod_count += RESET_ON_CFOD) == MAX_FAILED_CONNECTS)
-      {
-        SPARK_WLAN_RESET = RESET_ON_CFOD;
-        ERROR("Resetting CC3000 due to %d failed connect attempts", MAX_FAILED_CONNECTS);
-      }
+  //     if ((cfod_count += RESET_ON_CFOD) == MAX_FAILED_CONNECTS)
+  //     {
+  //       SPARK_WLAN_RESET = RESET_ON_CFOD;
+  //       ERROR("Resetting CC3000 due to %d failed connect attempts", MAX_FAILED_CONNECTS);
+  //     }
 
-      if (Internet_Test() < 0)
-      {
-        // No Internet Connection
-        if ((cfod_count += RESET_ON_CFOD) == MAX_FAILED_CONNECTS)
-        {
-          SPARK_WLAN_RESET = RESET_ON_CFOD;
-          ERROR("Resetting CC3000 due to %d failed connect attempts", MAX_FAILED_CONNECTS);
-        }
+  //     if (Internet_Test() < 0)
+  //     {
+  //       // No Internet Connection
+  //       if ((cfod_count += RESET_ON_CFOD) == MAX_FAILED_CONNECTS)
+  //       {
+  //         SPARK_WLAN_RESET = RESET_ON_CFOD;
+  //         ERROR("Resetting CC3000 due to %d failed connect attempts", MAX_FAILED_CONNECTS);
+  //       }
 
-        Spark_Error_Count = 2;
-      }
-      else
-      {
-        // Cloud not Reachable
-        Spark_Error_Count = 3;
-      }
+  //       Spark_Error_Count = 2;
+  //     }
+  //     else
+  //     {
+  //       // Cloud not Reachable
+  //       Spark_Error_Count = 3;
+  //     }
 
-      NVMEM_Spark_File_Data[ERROR_COUNT_FILE_OFFSET] = Spark_Error_Count;
-      nvmem_write(NVMEM_SPARK_FILE_ID, 1, ERROR_COUNT_FILE_OFFSET, &NVMEM_Spark_File_Data[ERROR_COUNT_FILE_OFFSET]);
+  //     NVMEM_Spark_File_Data[ERROR_COUNT_FILE_OFFSET] = Spark_Error_Count;
+  //     nvmem_write(NVMEM_SPARK_FILE_ID, 1, ERROR_COUNT_FILE_OFFSET, &NVMEM_Spark_File_Data[ERROR_COUNT_FILE_OFFSET]);
 
-      SPARK_CLOUD_SOCKETED = 0;
-    }
-  }
+  //     SPARK_CLOUD_SOCKETED = 0;
+  //   }
+  // }
 
-  if (SPARK_CLOUD_SOCKETED)
-  {
-    if (!SPARK_CLOUD_CONNECTED)
-    {
-      int err = Spark_Handshake();
+  // if (SPARK_CLOUD_SOCKETED)
+  // {
+  //   if (!SPARK_CLOUD_CONNECTED)
+  //   {
+  //     int err = Spark_Handshake();
 
-      if (err)
-      {
-        if (0 > err)
-        {
-          // Wrong key error, red
-          LED_SetRGBColor(RGB_COLOR_RED);
-        }
-        else if (1 == err)
-        {
-          // RSA decryption error, orange
-          LED_SetRGBColor(RGB_COLOR_ORANGE);
-        }
-        else if (2 == err)
-        {
-          // RSA signature verification error, magenta
-          LED_SetRGBColor(RGB_COLOR_MAGENTA);
-        }
+  //     if (err)
+  //     {
+  //       if (0 > err)
+  //       {
+  //         // Wrong key error, red
+  //         LED_SetRGBColor(RGB_COLOR_RED);
+  //       }
+  //       else if (1 == err)
+  //       {
+  //         // RSA decryption error, orange
+  //         LED_SetRGBColor(RGB_COLOR_ORANGE);
+  //       }
+  //       else if (2 == err)
+  //       {
+  //         // RSA signature verification error, magenta
+  //         LED_SetRGBColor(RGB_COLOR_MAGENTA);
+  //       }
 
-        LED_On(LED_RGB);
-      }
-      else
-      {
-        SPARK_CLOUD_CONNECTED = 1;
-      }
-    }
+  //       LED_On(LED_RGB);
+  //     }
+  //     else
+  //     {
+  //       SPARK_CLOUD_CONNECTED = 1;
+  //     }
+  //   }
 
-    if(SPARK_FLASH_UPDATE || System.mode() != MANUAL)
-    {
-      //Spark.process();
-    }
-  }
+  //   if(SPARK_FLASH_UPDATE || System.mode() != MANUAL)
+  //   {
+  //     //Spark.process();
+  //   }
+  // }
 }
 
 void SPARK_WLAN_SmartConfigProcess()

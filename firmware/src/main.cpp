@@ -159,7 +159,7 @@ extern "C" void SparkCoreConfig(void)
 
 #define delayms delay
 
-#define COM_BUFFSIZE 300
+#define COM_BUFFSIZE 200
 
 
 /*******************************************************************************
@@ -228,7 +228,7 @@ int main(void)
 	pinConfig.portData2 = GPIOA;
 	pinConfig.pinData2 = GPIO_Pin_15;
 	pinConfig.portData3 = GPIOA;
-	pinConfig.pinData3 = GPIO_Pin_1W4;
+	pinConfig.pinData3 = GPIO_Pin_14;
 	HD44780 * lcd = HD44780::getInstance(&pinConfig);
 
 	// Enable CC3000 SPI Connection

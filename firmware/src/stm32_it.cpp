@@ -33,6 +33,8 @@
 #include "usb_lib.h"
 #include "usb_istr.h"
 
+#include "hound_wlan.h"
+
 /* Private typedef -----------------------------------------------------------*/
 
 /* Private define ------------------------------------------------------------*/
@@ -428,10 +430,7 @@ void EXTI9_5_IRQHandler(void)
 		/* Clear the EXTI line pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line7);
 
-		if(NULL != Wiring_EXTI_Interrupt_Handler)
-		{
-			Wiring_EXTI_Interrupt_Handler(7);
-		}
+		WLAN_Configure();
 	}
 }
 

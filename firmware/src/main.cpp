@@ -245,19 +245,17 @@ int main(void)
   	/* Main loop */
 	while (1)
 	{
-		// if (!WLAN_GetStatus())
-		// {
-		//WLAN_Configure();
-		// }
 
-		if (WLAN_GetStatus())
+		if (millis() - g_lastBeat > HEARTBEAT_MILLS)
 		{
+			heartbeat_beat(HEARTBEAT_PORT, HEARTBEAT_PIN);
+			g_lastBeat = millis();
+
 			WLAN_KeepAlive_Loop();
 		}
 
 		if (WLAN_GetStatus() && !setup_complete)
 		{
-			//Spark_Disconnect();
 
 			g_Identity = new HoundIdentity;
 			g_Identity->retrieveIdentity();
@@ -321,19 +319,6 @@ int main(void)
 				static bool bSampleSocket = FALSE;
 
 				HD44780 * lcd = HD44780::getInstance();
-
-				if (millis() - g_lastBeat > HEARTBEAT_MILLS)
-				{
-					if (millis() - g_lastBeat > 2 * HEARTBEAT_MILLS)
-					{
-						lcd->clear();
-						lcd->home();
-						lcd->printf("I Failed %d", count++);
-					}
-
-					heartbeat_beat(HEARTBEAT_PORT, HEARTBEAT_PIN);
-					g_lastBeat = millis();
-				}
 
 				// Command Loop
 				if (millis() - g_lastConnectionCheck > CONNECTION_CHECK_MILLIS)
@@ -443,9 +428,6 @@ int main(void)
 					g_broadcastAddress.oct[2] = 112;
 					g_broadcastAddress.oct[3] = 113;
 				    g_Identity->broadcast(&g_broadcastAddress, (char *)sComBuff, COM_BUFFSIZE);
-
-				    //WLAN_Configure();
-				    //WLAN_Clear();
 
 				    bWatchdog = TRUE;
 				    //enableWatchdog();

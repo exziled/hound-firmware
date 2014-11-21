@@ -14,7 +14,6 @@ extern "C" {
 
 #include "rgbled.h"
 #include "spark_macros.h"
-#include "stm32f10x_gpio.h"
 #include "heartbeat.h"
 
 #define SMART_CONFIG_PROFILE_SIZE       67
@@ -96,10 +95,42 @@ void WLAN_Initialize(void)
 	// Initialize SPI/DMA interface
 	CC3000_SPI_DMA_Init();
 
+	// Initilize SmartConfig Interrupt Trigger Pin
+	WLAN_SmartConfigInitializer(SMART_CONFIG_PORT, SMART_CONFIG_PIN, SMART_CONFIG_EXTI, SMART_CONFIG_NVIC);
+
 	// Initilize CC3000 per wireless driver
 	wlan_init(WLAN_Async_Call, WLAN_Firmware_Patch, WLAN_Driver_Patch, WLAN_BootLoader_Patch, CC3000_Read_Interrupt_Pin, CC3000_Interrupt_Enable, CC3000_Interrupt_Disable, CC3000_Write_Enable_Pin);
 
 	Delay(100);
+}
+
+void WLAN_SmartConfigInitializer(GPIO_TypeDef * GPIOx, uint16_t GPIO_Pin, uint32_t EXTI_Line, uint8_t NVIC_IRQChannel)
+{
+
+	EXTI_InitTypeDef EXTI_InitStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
+	GPIO_InitTypeDef pinInit;
+
+    pinInit.GPIO_Pin = GPIO_Pin;
+    pinInit.GPIO_Speed = GPIO_Speed_50MHz;
+    pinInit.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_Init(GPIOx, &pinInit);
+
+    // TODO: I hate ST.
+    GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource7);
+
+    EXTI_InitStructure.EXTI_Line = EXTI_Line;
+	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+
+	EXTI_Init(&EXTI_InitStructure);
+
+	NVIC_InitStructure.NVIC_IRQChannel = NVIC_IRQChannel;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02; 
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
 }
 
 void WLAN_KeepAlive_Loop(void)

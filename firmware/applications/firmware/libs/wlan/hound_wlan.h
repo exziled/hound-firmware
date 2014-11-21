@@ -2,6 +2,10 @@
 #define __HOUND_WLAN_H
 
 #include <stdint.h>
+#include "misc.h"
+#include "stm32f10x_gpio.h"
+#include "stm32f10x_exti.h"
+
 
 typedef struct {
 	uint8_t STARTED;
@@ -13,6 +17,12 @@ typedef struct {
 	uint8_t SMART_CONFIG_STOP;
 	uint8_t SMART_CONFIG_DONE;
 } houndWLAN_t;
+
+
+#define SMART_CONFIG_PORT GPIOB
+#define SMART_CONFIG_PIN GPIO_Pin_7
+#define SMART_CONFIG_EXTI EXTI_Line7
+#define SMART_CONFIG_NVIC EXTI9_5_IRQn
 
 // Volatile due to interrupts
 static volatile houndWLAN_t houndWLAN = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -34,7 +44,7 @@ void WLAN_Configure(void);
 bool WLAN_IsConfiguring(void);
 bool WLAN_Clear(void);
 void WLAN_SmartConfigHandler(void);
-
+void WLAN_SmartConfigInitializer(GPIO_TypeDef * GPIOx, uint16_t GPIO_Pin, uint32_t EXTI_Line, uint8_t NVIC_IRQChannel);
 
 char *WLAN_Firmware_Patch(unsigned long *length);
 char *WLAN_Driver_Patch(unsigned long *length);

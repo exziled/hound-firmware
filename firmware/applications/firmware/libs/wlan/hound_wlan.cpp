@@ -14,11 +14,42 @@ extern "C" {
 
 #include "rgbled.h"
 #include "spark_macros.h"
+#include "stm32f10x_gpio.h"
+#include "heartbeat.h"
 
-char device[] = "CC3000";
-tNetappIpconfigRetArgs hound_ip_config;
+#define SMART_CONFIG_PROFILE_SIZE       67
+
+/* CC3000 EEPROM - Spark File Data Storage */
+#define NVMEM_SPARK_FILE_ID		14	//Do not change this ID
+#define NVMEM_SPARK_FILE_SIZE		16	//Change according to requirement
+#define WLAN_PROFILE_FILE_OFFSET	0
+#define WLAN_POLICY_FILE_OFFSET		1       //Not used henceforth
+#define WLAN_TIMEOUT_FILE_OFFSET	2
+#define ERROR_COUNT_FILE_OFFSET		3
+
+static char device[] = "CC3000";
+static tNetappIpconfigRetArgs hound_ip_config;
 // netapp_pingreport_args_t hound_ping_report;
 // int ping_report_num;
+
+/* Smart Config Prefix */
+static char aucCC3000_prefix[] = {'T', 'T', 'T'};
+/* AES key "sparkdevices2013" */
+static const unsigned char smartconfigkey[] = "sparkdevices2013";	//16 bytes
+/* device name used by smart config response */
+static char device_name[] = "CC3000";
+
+/* Manual connect credentials; only used if WLAN_MANUAL_CONNECT == 1 */
+static char _ssid[] = "ssid";
+static char _password[] = "password";
+// Auth options are WLAN_SEC_UNSEC, WLAN_SEC_WPA, WLAN_SEC_WEP, and WLAN_SEC_WPA2
+static unsigned char _auth = WLAN_SEC_WPA2;
+
+unsigned char WLANProfileIndex;
+unsigned char NVMEM_File_Data[NVMEM_SPARK_FILE_SIZE];
+
+
+
 
 extern volatile uint8_t SPARK_LED_FADE;
 
@@ -28,6 +59,34 @@ uint32_t SPARK_WLAN_SetNetWatchDog(uint32_t timeOutInMS)
   cc3000__event_timeout_ms = timeOutInMS;
   return rv;
 }
+
+static void recreate_spark_nvmem_file(void)
+{
+  // Spark file IO on old TI Driver was corrupting nvmem
+  // so remove the entry for Spark file in CC3000 EEPROM
+  nvmem_create_entry(NVMEM_SPARK_FILE_ID, 0);
+
+  // Create new entry for Spark File in CC3000 EEPROM
+  nvmem_create_entry(NVMEM_SPARK_FILE_ID, NVMEM_SPARK_FILE_SIZE);
+
+  // Zero out our array copy of the EEPROM
+  memset(NVMEM_File_Data, 0, NVMEM_SPARK_FILE_SIZE);
+
+  // Write zeroed-out array into the EEPROM
+  nvmem_write(NVMEM_SPARK_FILE_ID, NVMEM_SPARK_FILE_SIZE, 0, NVMEM_File_Data);
+}
+
+void Clear_NetApp_Dhcp(void)
+{
+	// Clear out the DHCP settings
+	unsigned long pucSubnetMask = 0;
+	unsigned long pucIP_Addr = 0;
+	unsigned long pucIP_DefaultGWAddr = 0;
+	unsigned long pucDNS = 0;
+
+	netapp_dhcp(&pucIP_Addr, &pucSubnetMask, &pucIP_DefaultGWAddr, &pucDNS);
+}
+
 
 
 void WLAN_Initialize(void)
@@ -156,6 +215,16 @@ void WLAN_Connect(void)
 	}
 }
 
+void WLAN_Disconnect(void)
+{
+	if (WLAN_GetStatus())
+	{
+		houndWLAN.DISCONNECT = 1;
+		wlan_ioctl_set_connection_policy(DISABLE, DISABLE, DISABLE);//Disable auto connect
+		wlan_disconnect();
+	}
+}
+
 
 void WLAN_Async_Call(long lEventType, char *data, unsigned char length)
 {
@@ -213,7 +282,107 @@ void WLAN_Async_Call(long lEventType, char *data, unsigned char length)
 
 void WLAN_SmartConfigHandler(void)
 {
+	houndWLAN.SMART_CONFIG_STOP = 0;
+	houndWLAN.CONNECTED = 0;
+	houndWLAN.DHCP = 0;
+	houndWLAN.SHUTDOWN = 0;
 
+	WLAN_Disconnect();
+	WLAN_On();
+
+	/* Create new entry for AES encryption key */
+	nvmem_create_entry(NVMEM_AES128_KEY_FILEID,16);
+
+	/* Write AES key to NVMEM */
+	aes_write_key((unsigned char *)(&smartconfigkey[0]));
+
+	wlan_smart_config_set_prefix((char*)aucCC3000_prefix);
+
+	/* Start the SmartConfig start process */
+	wlan_smart_config_start(1);
+
+	// 	//WiFiCredentialsReader wifi_creds_reader(wifi_add_profile_callback);
+
+	// /* Wait for SmartConfig/SerialConfig to finish */
+	// while (WiFi.listening())
+	// {
+	// 	if(WLAN_DELETE_PROFILES)
+	// 	{
+	// 		int toggle = 25;
+	// 		while(toggle--)
+	// 		{
+	// 			LED_Toggle(LED_RGB);
+	// 			Delay(50);
+	// 		}
+	// 		WiFi.clearCredentials();
+	// 		WLAN_DELETE_PROFILES = 0;
+	// 	}
+	// 	else
+	// 	{
+	// 		LED_Toggle(LED_RGB);
+	// 		Delay(250);
+	// 		//wifi_creds_reader.read();
+	// 	}
+	// }
+
+	LED_SetRGBColor(RGB_COLOR_BLUE);
+	LED_On(LED_RGB);
+	while (WLAN_IsConfiguring())
+	{
+    	static bool toggle = 1;
+
+		if (toggle)
+			GPIO_SetBits(HEARTBEAT_PORT, HEARTBEAT_PIN);
+		else
+			GPIO_ResetBits(HEARTBEAT_PORT, HEARTBEAT_PIN);
+
+		toggle = !toggle;
+    	Delay(100);
+	}
+
+	/* read count of wlan profiles stored */
+	nvmem_read(NVMEM_SPARK_FILE_ID, 1, WLAN_PROFILE_FILE_OFFSET, &NVMEM_File_Data[WLAN_PROFILE_FILE_OFFSET]);
+
+	if(houndWLAN.SMART_CONFIG_DONE)
+	{
+		/* Decrypt configuration information and add profile */
+		SPARK_WLAN_SmartConfigProcess();
+	}
+
+	WLAN_Connect();
+
+	houndWLAN.SMART_CONFIG_START = 0;
+
+	LED_SetRGBColor(RGB_COLOR_WHITE);
+
+}
+
+void WLAN_Configure(void)
+{
+	houndWLAN.SMART_CONFIG_START = 1;
+	return;
+}
+
+bool WLAN_IsConfiguring(void)
+{
+	if (houndWLAN.SMART_CONFIG_START && !houndWLAN.SMART_CONFIG_DONE)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool WLAN_Clear(void)
+{
+	if(wlan_ioctl_del_profile(255) == 0)
+	{
+		recreate_spark_nvmem_file();
+		Clear_NetApp_Dhcp();
+		return true;
+	}
+
+	return false;
 }
 
 void Set_NetApp_Timeout(void)
@@ -224,4 +393,136 @@ void Set_NetApp_Timeout(void)
 	unsigned long aucInactivity = DEFAULT_SEC_INACTIVITY;
 	SPARK_WLAN_SetNetWatchDog(S2M(DEFAULT_SEC_NETOPS)+ (DEFAULT_SEC_INACTIVITY ? 250 : 0) );
 	netapp_timeout_values(&aucDHCP, &aucARP, &aucKeepalive, &aucInactivity);
+}
+
+void SPARK_WLAN_SmartConfigProcess()
+{
+        unsigned int ssidLen, keyLen;
+        unsigned char *decKeyPtr;
+        unsigned char *ssidPtr;
+        extern unsigned char profileArray[];
+
+        // read the received data from fileID #13 and parse it according to the followings:
+        // 1) SSID LEN - not encrypted
+        // 2) SSID - not encrypted
+        // 3) KEY LEN - not encrypted. always 32 bytes long
+        // 4) Security type - not encrypted
+        // 5) KEY - encrypted together with true key length as the first byte in KEY
+        //       to elaborate, there are two corner cases:
+        //              1) the KEY is 32 bytes long. In this case, the first byte does not represent KEY length
+        //              2) the KEY is 31 bytes long. In this case, the first byte represent KEY length and equals 31
+        if(SMART_CONFIG_PROFILE_SIZE != nvmem_read(NVMEM_SHARED_MEM_FILEID, SMART_CONFIG_PROFILE_SIZE, 0, profileArray))
+        {
+          return;
+        }
+
+        ssidPtr = &profileArray[1];
+
+        ssidLen = profileArray[0];
+
+        decKeyPtr = &profileArray[profileArray[0] + 3];
+
+        UINT8 expandedKey[176];
+        aes_decrypt(decKeyPtr, (unsigned char *)smartconfigkey, expandedKey);
+        if (profileArray[profileArray[0] + 1] > 16)
+        {
+          aes_decrypt((UINT8 *)(decKeyPtr + 16), (unsigned char *)smartconfigkey, expandedKey);
+        }
+
+        if (*(UINT8 *)(decKeyPtr +31) != 0)
+        {
+                if (*decKeyPtr == 31)
+                {
+                        keyLen = 31;
+                        decKeyPtr++;
+                }
+                else
+                {
+                        keyLen = 32;
+                }
+        }
+        else
+        {
+                keyLen = *decKeyPtr;
+                decKeyPtr++;
+        }
+
+        WLAN_SetCredentials((char *)ssidPtr, ssidLen, (char *)decKeyPtr, keyLen, profileArray[profileArray[0] + 2]);
+}
+
+void WLAN_SetCredentials(char *ssid, unsigned int ssidLen, char *password, unsigned int passwordLen, unsigned long security)
+{
+
+  if (0 == password[0]) {
+    security = WLAN_SEC_UNSEC;
+  }
+
+  // add a profile
+  switch (security)
+  {
+  case WLAN_SEC_UNSEC://None
+    {
+      wlan_add_profile(WLAN_SEC_UNSEC,   // Security type
+        (unsigned char *)ssid,                                // SSID
+        ssidLen,                                              // SSID length
+        NULL,                                                 // BSSID
+        1,                                                    // Priority
+        0, 0, 0, 0, 0);
+
+      break;
+    }
+
+  case WLAN_SEC_WEP://WEP
+    {
+      //if(!WLAN_SMART_CONFIG_FINISHED)
+      //{
+        // Get WEP key from string, needs converting
+        passwordLen = (strlen(password)/2); // WEP key length in bytes
+        char byteStr[3]; byteStr[2] = '\0';
+
+        for (UINT32 i = 0 ; i < passwordLen ; i++) { // Basic loop to convert text-based WEP key to byte array, can definitely be improved
+          byteStr[0] = password[2*i]; byteStr[1] = password[(2*i)+1];
+          password[i] = strtoul(byteStr, NULL, 16);
+        }
+      //}
+
+      wlan_add_profile(WLAN_SEC_WEP,    // Security type
+        (unsigned char *)ssid,                                // SSID
+        ssidLen,                                              // SSID length
+        NULL,                                                 // BSSID
+        1,                                                    // Priority
+        passwordLen,                                          // KEY length
+        0,                                                    // KEY index
+        0,
+        (unsigned char *)password,                            // KEY
+        0);
+
+      break;
+    }
+
+  case WLAN_SEC_WPA://WPA
+  case WLAN_SEC_WPA2://WPA2
+    {
+      wlan_add_profile(WLAN_SEC_WPA2,    // Security type
+        (unsigned char *)ssid,                                // SSID
+        ssidLen,                                              // SSID length
+        NULL,                                                 // BSSID
+        1,                                                    // Priority
+        0x18,                                                 // PairwiseCipher
+        0x1e,                                                 // GroupCipher
+        2,                                                    // KEY management
+        (unsigned char *)password,                            // KEY
+        passwordLen);                                         // KEY length
+
+      break;
+    }
+  }
+
+  // if(wlan_profile_index != -1)
+  // {
+  //   NVMEM_Spark_File_Data[WLAN_PROFILE_FILE_OFFSET] = wlan_profile_index + 1;
+  // }
+
+  //  write count of wlan profiles stored 
+  // nvmem_write(NVMEM_SPARK_FILE_ID, 1, WLAN_PROFILE_FILE_OFFSET, &NVMEM_Spark_File_Data[WLAN_PROFILE_FILE_OFFSET]);
 }

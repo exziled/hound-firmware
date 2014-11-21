@@ -83,21 +83,21 @@ uint32_t wlan_watchdog = 0;
 #define CLR_WLAN_WD() do { wlan_watchdog = 0; WAN_WD_DEBUG("WD Cleared, was %d",wlan_watchdog);;}while(0)
 
 volatile system_tick_t spark_loop_total_millis = 0;
-
+// 
 void (*announce_presence)(void);
 
 /* Smart Config Prefix */
-char aucCC3000_prefix[] = {'T', 'T', 'T'};
+static char aucCC3000_prefix[] = {'T', 'T', 'T'};
 /* AES key "sparkdevices2013" */
-const unsigned char smartconfigkey[] = "sparkdevices2013";	//16 bytes
+static const unsigned char smartconfigkey[] = "sparkdevices2013";	//16 bytes
 /* device name used by smart config response */
-char device_name[] = "CC3000";
+static char device_name[] = "CC3000";
 
 /* Manual connect credentials; only used if WLAN_MANUAL_CONNECT == 1 */
-char _ssid[] = "ssid";
-char _password[] = "password";
+static char _ssid[] = "ssid";
+static char _password[] = "password";
 // Auth options are WLAN_SEC_UNSEC, WLAN_SEC_WPA, WLAN_SEC_WEP, and WLAN_SEC_WPA2
-unsigned char _auth = WLAN_SEC_WPA2;
+static unsigned char _auth = WLAN_SEC_WPA2;
 
 unsigned char wlan_profile_index;
 

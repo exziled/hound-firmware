@@ -49,6 +49,8 @@
 
 #include "heartbeat.h"
 
+#include "stm32f10x_gpio.h"
+
 extern "C" {
 #include "usb_conf.h"
 #include "usb_lib.h"
@@ -243,6 +245,11 @@ int main(void)
   	/* Main loop */
 	while (1)
 	{
+		// if (!WLAN_GetStatus())
+		// {
+		//WLAN_Configure();
+		// }
+
 		if (WLAN_GetStatus())
 		{
 			WLAN_KeepAlive_Loop();
@@ -398,6 +405,7 @@ int main(void)
 
 							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"ws\",\"result\":%d}", reference, pComBuff[2]);
 							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
+
 						}
 					}
 
@@ -420,10 +428,10 @@ int main(void)
 					g_lastSocketUpdate = millis();
 				}
 
-				if (bWatchdog && millis() - g_watchdogMillis > WATCHDOG_UPDATE_DELAY)
-				{
-					updateWatchdog();
-				}
+				// if (bWatchdog && millis() - g_watchdogMillis > WATCHDOG_UPDATE_DELAY)
+				// {
+				// 	updateWatchdog();
+				// }
 
 				if (!bBroacast && millis() - g_startupMillis > STARTUP_BROADCAST_DELAY)
 				{
@@ -436,8 +444,11 @@ int main(void)
 					g_broadcastAddress.oct[3] = 113;
 				    g_Identity->broadcast(&g_broadcastAddress, (char *)sComBuff, COM_BUFFSIZE);
 
+				    //WLAN_Configure();
+				    //WLAN_Clear();
+
 				    bWatchdog = TRUE;
-				    enableWatchdog();
+				    //enableWatchdog();
 				    g_watchdogMillis = millis();
 				}
 

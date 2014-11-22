@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 #include "misc.h"
+
+#include "netapp.h"
+
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_exti.h"
 
@@ -17,6 +20,11 @@ typedef struct {
 	uint8_t SMART_CONFIG_STOP;
 	uint8_t SMART_CONFIG_DONE;
 } houndWLAN_t;
+
+typedef struct
+{
+	uint8_t oct[4];
+} ipAddr_t;
 
 
 #define SMART_CONFIG_PORT GPIOB
@@ -35,6 +43,9 @@ void WLAN_On(void);
 void WLAN_Off(void);
 void WLAN_Connect(void);
 void WLAN_Disconnect(void);
+void WLAN_Ping(ipAddr_t ipAddress);
+void WLAN_Ping_Broadcats(void);
+void WLAN_IPConfig(tNetappIpconfigRetArgs * ipConfig);
 uint8_t WLAN_GetStatus(void);
 
 void WLAN_Async_Call(long lEventType, char *data, unsigned char length);

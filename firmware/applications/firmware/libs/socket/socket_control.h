@@ -7,6 +7,6 @@ void initializeSocket(uint16_t socket);
 void socketSetState(uint16_t socket, bool socketState);
 void socketToggleState(uint16_t socket);
 uint8_t socketGetState(uint16_t socket);
-socketMap_t * socketGetStruct(uint16_t socket);
+volatile socketMap_t * socketGetStruct(uint16_t socket);
 
 #endif //__HOUND_SOCKET_CONTROL

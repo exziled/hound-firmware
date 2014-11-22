@@ -251,6 +251,7 @@ int main(void)
 
 		if (WLAN_GetStatus() && !setup_complete)
 		{
+			WLAN_Ping_Broadcats();
 
 			g_Identity = new HoundIdentity;
 			g_Identity->retrieveIdentity();
@@ -388,7 +389,7 @@ int main(void)
 
 				if (g_subscriptionEnabled && millis() - g_lastUpdate > UPDATE_INTERVAL_MILLS) {
 
-					//buffSendSize = Communication::parseRequest(&g_subscriptionRequest, 1, (char *)sComBuff, COM_BUFFSIZE, rmsAggregation, g_Identity);
+					buffSendSize = Communication::parseRequest(&g_subscriptionRequest, 1, (char *)sComBuff, COM_BUFFSIZE, g_Identity);
 					Communication::HoundProto::sendData(sComBuff, buffSendSize, &g_subscriptionAddress);
 
 					g_lastUpdate = millis();
@@ -396,7 +397,7 @@ int main(void)
 
 				if ((bSampleSocket) && (millis() - g_lastSocketUpdate) > SOCKET_UPDATE_INTERVAL_MILLS)
 				{
-					//buffSendSize = Communication::parseRequest(&g_fastSubRequest, 1, (char *)sComBuff, COM_BUFFSIZE, rmsAggregation, g_Identity);
+					buffSendSize = Communication::parseRequest(&g_fastSubRequest, 1, (char *)sComBuff, COM_BUFFSIZE, g_Identity);
 					Communication::HoundProto::sendData(sComBuff, buffSendSize, &g_fastSubAddress);
 					
 					g_lastSocketUpdate = millis();
@@ -437,7 +438,7 @@ void RTC_IRQHandler(void)
 		// Trigger voltage/current sampling once every SAMPLE_INTERVAL seconds
 		if (primarySample != NULL && sampleIntervalCount++ >= SAMPLE_INTERVAL)
 		{
-			socketMap_t * socketSample = socketGetStruct(0);
+			volatile socketMap_t * socketSample = socketGetStruct(0);
 
 			primarySample->voltageCSPort = socketSample->voltageCSPort;
 			primarySample->voltageCSPin = socketSample->voltageCSPin;
@@ -446,7 +447,12 @@ void RTC_IRQHandler(void)
 			primarySample->currentSPIAlt = socketSample->currentSPIAlt;
 			primarySample->rmsResults = socketSample->rmsResults;
 
-			getSampleBlock(primarySample);
+			int ret = getSampleBlock(primarySample);
+			if (ret < 0)
+			{
+				LED_SetRGBColor(RGB_COLOR_RED);
+			}
+
 			sampleIntervalCount = 0;
 		}
 

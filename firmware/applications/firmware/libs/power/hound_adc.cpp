@@ -110,7 +110,7 @@ extern "C" void TIM3_IRQHandler()
 
             #ifdef NEW_SAMPLE_BOARD
                 // Sample Current
-                GPIO_ResetBits(g_sConfig->currentCSPort, g_sConfig->currentCSPin);
+                GPIO_ResetBits(g_sConfig->currentCSPort, 1 << g_sConfig->currentCSPin);
 
                 /* Code assumes that previous read correctly informed ADC
                  * the channel of this read.  Assume we're going to do the same
@@ -123,10 +123,10 @@ extern "C" void TIM3_IRQHandler()
                 temp = SPI_I2S_RecieveData(SPI1);
 
                 g_sConfig->currentBuffer[g_sConfig->sampleCount] = fixed(temp);
-                GPIO_SetBits(g_sConfig->currentCSPort, g_sConfig->currentCSPin);
+                GPIO_SetBits(g_sConfig->currentCSPort, 1 << g_sConfig->currentCSPin);
 
                 // Sample Voltage
-                GPIO_ResetBits(g_sConfig->voltageCSPort, g_sConfig->voltageCSPin);
+                GPIO_ResetBits(g_sConfig->voltageCSPort, 1 << g_sConfig->voltageCSPin);
                 while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
                 SPI_I2S_SendData(SPI1, 0);   // No channels for voltage
                 while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
@@ -134,11 +134,11 @@ extern "C" void TIM3_IRQHandler()
                 temp = SPI_I2S_RecieveData(SPI1);
 
                 g_sConfig->voltageBuffer[g_sConfig->sampleCount] = fixed(temp);
-                GPIO_SetBits(g_sConfig->voltageCSPort, g_sConfig->voltageCSPin);
+                GPIO_SetBits(g_sConfig->voltageCSPort, 1 << g_sConfig->voltageCSPin);
 
             #else
                 // Drive CS Low
-                GPIO_ResetBits(g_sConfig->currentCSPort, g_sConfig->currentCSPin);
+                GPIO_ResetBits(g_sConfig->currentCSPort, 1 << g_sConfig->currentCSPin);
 
                 // Get CHA (Current) Data
                 while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
@@ -162,7 +162,7 @@ extern "C" void TIM3_IRQHandler()
                 g_sConfig->voltageBuffer[g_sConfig->sampleCount] = fixed(temp);
 
                 // Transfer Done, CS High
-                GPIO_SetBits(g_sConfig->currentCSPort, g_sConfig->currentCSPin);
+                GPIO_SetBits(g_sConfig->currentCSPort, 1 << g_sConfig->currentCSPin);
             #endif
 
             g_sConfig->sampleCount++;

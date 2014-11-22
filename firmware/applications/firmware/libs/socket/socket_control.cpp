@@ -1,6 +1,6 @@
 #include "socket_control.h"
 
-extern socketMap_t socketMap[];
+extern volatile socketMap_t socketMap[];
 
 void initializeSocket(uint16_t socket)
 {
@@ -53,7 +53,7 @@ uint8_t socketGetState(uint16_t socket)
 	return GPIO_ReadInputDataBit(socketMap[socket].controlPort, 1 << socketMap[socket].controlPin);
 }
 
-socketMap_t * socketGetStruct(uint16_t socket)
+volatile socketMap_t * socketGetStruct(uint16_t socket)
 {
     return &socketMap[socket];
 }

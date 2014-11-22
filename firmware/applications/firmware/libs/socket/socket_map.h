@@ -19,7 +19,7 @@ typedef struct {
 	AggregatedRMS * rmsResults;		// Storage of calculated values
 } socketMap_t;
 
-static socketMap_t socketMap[] = {
+static volatile socketMap_t socketMap[] = {
 //	|----Current CS -------|--|------Voltage CS-------|------Control Pin -----|
 	{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource0, NULL},
 	{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource1, NULL}

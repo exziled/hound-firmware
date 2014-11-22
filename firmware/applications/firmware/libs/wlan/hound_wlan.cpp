@@ -225,6 +225,45 @@ uint8_t WLAN_GetStatus(void)
 }
 
 
+void WLAN_Ping(ipAddr_t * ipAddress, unsigned long timeout)
+{
+	if (!WLAN_GetStatus())
+	{
+		return;
+	}
+
+	unsigned long ip[4] = {ipAddress->oct[0], ipAddress->oct[1], ipAddress->oct[2], ipAddress->oct[3]};
+
+	// Send ping to ipAddress, 2 attempts, 64 bytes, 10 msec timeout
+	netapp_ping_send(ip, 2, 64, timeout);
+}
+
+void WLAN_Ping_Broadcats(void)
+{
+	tNetappIpconfigRetArgs ipConfig;
+	ipAddr_t pingAddress;
+
+	WLAN_IPConfig(&ipConfig);
+
+	pingAddress.oct[0] = ipConfig.aucDefaultGateway[0];
+	pingAddress.oct[1] = ipConfig.aucDefaultGateway[1];
+	pingAddress.oct[2] = ipConfig.aucDefaultGateway[2];
+	pingAddress.oct[3] = ipConfig.aucDefaultGateway[3];
+
+	// 10 msec timeout
+	WLAN_Ping(&pingAddress, 10);
+}
+
+void WLAN_IPConfig(tNetappIpconfigRetArgs * ipConfig)
+{
+	if (!WLAN_GetStatus())
+	{
+		return;
+	}
+
+	netapp_ipconfig(ipConfig);
+}
+
 void WLAN_Connect(void)
 {
 	if (!WLAN_GetStatus())

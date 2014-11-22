@@ -10,13 +10,19 @@
 
 typedef struct
 {
+	// Generic Storage
 	fixed_t * currentBuffer;
 	fixed_t * voltageBuffer;
 	AggregatedRMS * rmsResults;
 	uint16_t bufferSize;
 	uint16_t sampleCount;
-	GPIO_TypeDef* csPort;
-	uint16_t csPin;
+	// Voltage Selection Details
+	GPIO_TypeDef* voltageCSPort;
+	uint8_t voltageCSPin;
+	// Current Selection Details
+	GPIO_TypeDef* currentCSPort;
+	uint8_t currentCSPin;
+	uint8_t currentSPIAlt;
 } sampleSetup_t;
 
 extern "C"

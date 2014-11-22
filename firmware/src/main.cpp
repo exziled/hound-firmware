@@ -195,9 +195,6 @@ int main(void)
 	uint8_t * sComBuff;
 	int buffSendSize;
 
-	// Sample Buffers
-	AggregatedRMS * rmsAggregation = NULL;
-
 	// Communication Support
 	WebSocket * g_sampleSocket = NULL;
 	Communication::ipAddr_t recvAddress;
@@ -263,17 +260,11 @@ int main(void)
 
 			com_demo = new Communication::HoundProto(9080);
 
-			// Memory for sampling
+			// Sampling storage buffers and associated setup, everything else handled in RTC interrupt
 			primarySample = (sampleSetup_t *)malloc(sizeof(sampleSetup_t));
 			primarySample->bufferSize = BLOCKSIZE;
-			primarySample->csPin = GPIO_Pin_4;
-			primarySample->csPort = GPIOA;
 			primarySample->currentBuffer = (fixed_t *)malloc(sizeof(fixed_t) * BLOCKSIZE);
 			primarySample->voltageBuffer = (fixed_t *)malloc(sizeof(fixed_t) * BLOCKSIZE);
-
-			rmsAggregation = new AggregatedRMS(6);
-
-			primarySample->rmsResults = rmsAggregation;
 
 		    pComBuff = (uint8_t *)malloc(COM_BUFFSIZE);
 		    sComBuff = (uint8_t *)malloc(COM_BUFFSIZE);
@@ -339,7 +330,7 @@ int main(void)
 						if (operation == 0x00)
 						{
 							// Process Socket Data Operation
-							buffSendSize = Communication::parseRequest((Communication::hRequest_t *)(pComBuff + 2), (ret-2) / sizeof(Communication::hRequest_t), (char *)sComBuff, COM_BUFFSIZE, rmsAggregation, g_Identity);
+							buffSendSize = Communication::parseRequest((Communication::hRequest_t *)(pComBuff + 2), (ret-2) / sizeof(Communication::hRequest_t), (char *)sComBuff, COM_BUFFSIZE, g_Identity);
 							
 							// Server Reply
 							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
@@ -397,7 +388,7 @@ int main(void)
 
 				if (g_subscriptionEnabled && millis() - g_lastUpdate > UPDATE_INTERVAL_MILLS) {
 
-					buffSendSize = Communication::parseRequest(&g_subscriptionRequest, 1, (char *)sComBuff, COM_BUFFSIZE, rmsAggregation, g_Identity);
+					//buffSendSize = Communication::parseRequest(&g_subscriptionRequest, 1, (char *)sComBuff, COM_BUFFSIZE, rmsAggregation, g_Identity);
 					Communication::HoundProto::sendData(sComBuff, buffSendSize, &g_subscriptionAddress);
 
 					g_lastUpdate = millis();
@@ -405,7 +396,7 @@ int main(void)
 
 				if ((bSampleSocket) && (millis() - g_lastSocketUpdate) > SOCKET_UPDATE_INTERVAL_MILLS)
 				{
-					buffSendSize = Communication::parseRequest(&g_fastSubRequest, 1, (char *)sComBuff, COM_BUFFSIZE, rmsAggregation, g_Identity);
+					//buffSendSize = Communication::parseRequest(&g_fastSubRequest, 1, (char *)sComBuff, COM_BUFFSIZE, rmsAggregation, g_Identity);
 					Communication::HoundProto::sendData(sComBuff, buffSendSize, &g_fastSubAddress);
 					
 					g_lastSocketUpdate = millis();
@@ -446,6 +437,15 @@ void RTC_IRQHandler(void)
 		// Trigger voltage/current sampling once every SAMPLE_INTERVAL seconds
 		if (primarySample != NULL && sampleIntervalCount++ >= SAMPLE_INTERVAL)
 		{
+			socketMap_t * socketSample = socketGetStruct(0);
+
+			primarySample->voltageCSPort = socketSample->voltageCSPort;
+			primarySample->voltageCSPin = socketSample->voltageCSPin;
+			primarySample->currentCSPort = socketSample->currentCSPort;
+			primarySample->currentCSPin = socketSample->currentCSPin;
+			primarySample->currentSPIAlt = socketSample->currentSPIAlt;
+			primarySample->rmsResults = socketSample->rmsResults;
+
 			getSampleBlock(primarySample);
 			sampleIntervalCount = 0;
 		}

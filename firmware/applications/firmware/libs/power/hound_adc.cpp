@@ -34,17 +34,6 @@ void initADCSPI(void)
     pinInit.GPIO_Mode = GPIO_Mode_IN_FLOATING;
     GPIO_Init(GPIOA, &pinInit);
 
-
-    pinInit.GPIO_Pin = GPIO_Pin_4;
-    pinInit.GPIO_Speed = GPIO_Speed_50MHz;
-    pinInit.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_Init(GPIOA, &pinInit);
-
-    // After pin configuration, map SPI1 AF to pins
-    //GPIO_PinRemapConfig(GPIO_Remap_SPI1, ENABLE);
-    // You'd think this is what you'd want to do, but apparently not
-
-
     // Drive CS High (inactive);
     GPIO_SetBits(GPIOA, GPIO_Pin_4);
 
@@ -65,6 +54,7 @@ void initADCSPI(void)
     SPI_Init(SPI1, &spiInit);   // Set SPI Params
     SPI_Cmd(SPI1, ENABLE);      // Enable SPI
 
+    // Sample Interval Timer
     initTIM3();
 }
 
@@ -103,12 +93,10 @@ void initTIM3(void)
 extern "C" void TIM3_IRQHandler()
 {
     int16_t temp = 0;
-    static uint32_t lastTimestamp = 0;
 
     if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
     {
         TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-
 
         // No sample configuration, something's very wrong
         if (g_sConfig == NULL)
@@ -116,38 +104,66 @@ extern "C" void TIM3_IRQHandler()
             return;
         }
 
+        // While there's still data to process
         if (g_sConfig->sampleCount < g_sConfig->bufferSize)
         {
-            // Drive CS Low
-            GPIO_ResetBits(g_sConfig->csPort, g_sConfig->csPin);
 
-            // Get CHA Data
-            while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
+            #ifdef NEW_SAMPLE_BOARD
+                // Sample Current
+                GPIO_ResetBits(g_sConfig->currentCSPort, g_sConfig->currentCSPin);
 
-            SPI_I2S_SendData(SPI1, 0);
+                /* Code assumes that previous read correctly informed ADC
+                 * the channel of this read.  Assume we're going to do the same
+                 */
+                while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
+                SPI_I2S_SendData(SPI1, g_sConfig->CurrentSPIAlt);   // Channel of next current sample
+                while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
+                
+                // Hopefully, recieved data is correct channel
+                temp = SPI_I2S_RecieveData(SPI1);
 
-            while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
+                g_sConfig->currentBuffer[g_sConfig->sampleCount] = fixed(temp);
+                GPIO_SetBits(g_sConfig->currentCSPort, g_sConfig->currentCSPin);
 
-            temp = SPI_I2S_ReceiveData(SPI1);
-            temp = (temp & 0xFFF) | ((temp & 0x800) ? 0xF000 : 0);
+                // Sample Voltage
+                GPIO_ResetBits(g_sConfig->voltageCSPort, g_sConfig->voltageCSPin);
+                while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
+                SPI_I2S_SendData(SPI1, 0);   // No channels for voltage
+                while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
+                
+                temp = SPI_I2S_RecieveData(SPI1);
 
-            g_sConfig->currentBuffer[g_sConfig->sampleCount] = fixed(temp);
+                g_sConfig->voltageBuffer[g_sConfig->sampleCount] = fixed(temp);
+                GPIO_SetBits(g_sConfig->voltageCSPort, g_sConfig->voltageCSPin);
+
+            #else
+                // Drive CS Low
+                GPIO_ResetBits(g_sConfig->currentCSPort, g_sConfig->currentCSPin);
+
+                // Get CHA (Current) Data
+                while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
+                SPI_I2S_SendData(SPI1, 0);
+                while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
+
+                temp = SPI_I2S_ReceiveData(SPI1);
+                temp = (temp & 0xFFF) | ((temp & 0x800) ? 0xF000 : 0);  // Sign extend
+
+                g_sConfig->currentBuffer[g_sConfig->sampleCount] = fixed(temp);
 
 
-            // Get CHB Data
-            while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
+                // Get CHB (Voltage) Data
+                while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
+                SPI_I2S_SendData(SPI1, 0);
+                while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
 
-            SPI_I2S_SendData(SPI1, 0);
+                temp = SPI_I2S_ReceiveData(SPI1);
+                temp = (temp & 0xFFF) | ((temp & 0x800) ? 0xF000 : 0);  // Sign Extend
 
-            while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
+                g_sConfig->voltageBuffer[g_sConfig->sampleCount] = fixed(temp);
 
-            temp = SPI_I2S_ReceiveData(SPI1);
-            temp = (temp & 0xFFF) | ((temp & 0x800) ? 0xF000 : 0);
-
-            g_sConfig->voltageBuffer[g_sConfig->sampleCount] = fixed(temp);
-
-            // Transfer Done, CS High
-            GPIO_SetBits(g_sConfig->csPort, g_sConfig->csPin);
+                // Transfer Done, CS High
+                GPIO_SetBits(g_sConfig->currentCSPort, g_sConfig->currentCSPin);
+            #endif
 
             g_sConfig->sampleCount++;
 
@@ -155,17 +171,6 @@ extern "C" void TIM3_IRQHandler()
             if (g_sConfig->sampleCount == g_sConfig->bufferSize)
             {
                 rmsValues_t * rmsValues;
-
-                // Trigger vector interrupt on exti channel 4
-                // probably not the right way to do it
-                //NVIC->STIR = EXTI4_IRQn;
-                //EXTI_GenerateSWInterrupt(EXTI_Line4);
-                
-                // Not using this anymore
-                // if (g_rmsResult == NULL)
-                // {
-                //     return;
-                // }
 
                 for (int i = 0; i < g_sConfig->bufferSize; i++)
                 {
@@ -185,10 +190,9 @@ extern "C" void TIM3_IRQHandler()
                 fixed_t tempCurrent, tempVoltage;
 
                 // Move to next aggregation index depending on time
-                if (newTimestamp - lastTimestamp > 60 / (g_sConfig->rmsResults->getSize() +1))
+                if (newTimestamp - g_sConfig->rmsResults->getAt(1)->timestamp > 60 / (g_sConfig->rmsResults->getSize() +1))
                 {
                     rmsValues = g_sConfig->rmsResults->getBack();
-                    lastTimestamp = newTimestamp;
                 }
                 rmsValues->timestamp = newTimestamp;
 
@@ -202,13 +206,12 @@ extern "C" void TIM3_IRQHandler()
                 rmsValues->apparent = fixed_mul(rmsValues->voltage, rmsValues->current);
 
                 fixed_t fixed_scale = fixed(1);
-                fixed_scale = fixed_div(fixed_scale, 12000);
-
+                fixed_scale = fixed_div(fixed_scale, 12000); 
                 fixed_t sum = 0;
 
                 for (int i = 0; i < g_sConfig->bufferSize; i++)
                 {
-                    // Real RMS power is individual current and voltage samples multiplied
+                    // Real power is individual current and voltage samples multiplied
                     sum += (fixed_mul(fixed_mul(g_sConfig->voltageBuffer[i], g_sConfig->currentBuffer[i]), fixed_scale));
                 }
 
@@ -242,15 +245,6 @@ int getSampleBlock(volatile sampleSetup_t * sampleSetup)
 
     // Pass over the sample struct
     g_sConfig = sampleSetup;
-
-    // Initialize CS Pin
-    GPIO_InitTypeDef pinInit;
-
-    // Configure CS Pin
-    pinInit.GPIO_Pin = sampleSetup->csPin;
-    pinInit.GPIO_Speed = GPIO_Speed_50MHz;
-    pinInit.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_Init(sampleSetup->csPort, &pinInit);
 
     // Reset buffer index
     sampleSetup->sampleCount = 0;

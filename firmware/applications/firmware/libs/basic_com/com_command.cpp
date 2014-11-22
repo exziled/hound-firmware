@@ -8,6 +8,7 @@
 #include "hound_debug.h"
 
 #include "socket_control.h"
+#include "hound_rms_fixed.h"
 
 // G++ doesn't like constant strings
 #pragma GCC diagnostic ignored "-Wwrite-strings"
@@ -83,7 +84,7 @@ int Communication::parseCommand(uint8_t * arrCommands, int count, char * strResp
 // sample count - Supports All 0xF or Single 0x00
 // Parameters -  
 // all these snprintfs probably aren't that efficient
-int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strResponse, int responseBuffSize, AggregatedRMS * rmsAggregation, HoundIdentity * identity)
+int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strResponse, int responseBuffSize, HoundIdentity * identity)
 {
 	int i=0, j=0, replySize = 0;
 	Communication::hRequest_t * request = NULL;
@@ -91,6 +92,15 @@ int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strRe
 	for (int j = 0; j < count; j++)
 	{
 		request = &(arrRequest[j]);
+
+		int socket = (request->rNode >> 4) & 0x0F;
+		AggregatedRMS * rmsAggregation = socketGetStruct(socket)->rmsResults;
+
+		// Socket not initialized correctly
+		if (rmsAggregation == NULL)
+		{
+			return -1;
+		}
 
 		// Determine if user requested all data (aggregation) or the single latest data point
 		int dataCount = request->rNode & 0x0F ? rmsAggregation->getSize() : 1;

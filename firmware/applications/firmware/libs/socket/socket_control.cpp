@@ -1,6 +1,6 @@
 #include "socket_control.h"
 
-extern const socketMap_t socketMap[];
+extern socketMap_t socketMap[];
 
 void initializeSocket(uint16_t socket)
 {
@@ -22,11 +22,13 @@ void initializeSocket(uint16_t socket)
     GPIO_SetBits(socketMap[socket].voltageCSPort, 1 << socketMap[socket].voltageCSPin);	// Drive CS High to deactivate
 
 	/* Triac Control Pin Init */
-
     pinInit.GPIO_Pin = 1 << socketMap[socket].controlPin;
     pinInit.GPIO_Speed = GPIO_Speed_50MHz;
     pinInit.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_Init(socketMap[socket].controlPort, &pinInit);
+
+    /* Create Conversion Storage Buffer */
+    socketMap[socket].rmsResults = new AggregatedRMS(6);
 }
 
 void socketSetState(uint16_t socket, bool socketState)
@@ -51,21 +53,7 @@ uint8_t socketGetState(uint16_t socket)
 	return GPIO_ReadInputDataBit(socketMap[socket].controlPort, 1 << socketMap[socket].controlPin);
 }
 
-
-int16_t socketGetCurrent(uint16_t socket)
+socketMap_t * socketGetStruct(uint16_t socket)
 {
-	int16_t temp;
-
-    GPIO_ResetBits(socketMap[socket].controlPort, 1 << socketMap[socket].controlPin);
-
-    // Get CHA Data
-    while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
-
-    SPI_I2S_SendData(SPI1, 0);
-
-    while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
-
-    // TODO: Change when we switch ADCs
-    temp = SPI_I2S_ReceiveData(SPI1);
-    temp = (temp & 0xFFF) | ((temp & 0x800) ? 0xF000 : 0);	// Sign extend
+    return &socketMap[socket];
 }

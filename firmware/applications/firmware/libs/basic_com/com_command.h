@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 #include "stm32f10x_gpio.h"
-#include "hound_rms_fixed.h"
 #include "hound_identity.h"
 #include "socket_control.h"
 
@@ -20,7 +19,7 @@ namespace Communication
 
 	// Functions
 	int parseCommand(uint8_t * arrCommands, int count, char * strResponse, int responseBuffSize, uint8_t reference);
-	int parseRequest(hRequest_t * arrRequest, int count, char * strResponse, int responseBuffSize, AggregatedRMS * rmsAggregation, HoundIdentity * identity);
+	int parseRequest(hRequest_t * arrRequest, int count, char * strResponse, int responseBuffSize, HoundIdentity * identity);
 
 	int strcat(char * strDest, uint16_t buffSize, char * strSrc);
 	int strcat(char * strDest, uint16_t buffSize, fixed_t concat, char delim = '\0');

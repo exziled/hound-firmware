@@ -176,7 +176,6 @@ int main(void)
 	int ret = 0;
 	bool g_subscriptionEnabled = false; //@todo write state to eeprom maybe of pins aswell.
 
-
 	// We have running firmware, otherwise we wouldn't have gotten here
 	uint8_t SPARK_WIRING_APPLICATION = 0;
 
@@ -217,8 +216,8 @@ int main(void)
 
 	// LCD Setup
 	LCDPinConfig_t pinConfig;
-	pinConfig.portRS = GPIOB;
-	pinConfig.pinRS = GPIO_Pin_7;
+	pinConfig.portRS = GPIOA;
+	pinConfig.pinRS = GPIO_Pin_0;
 	pinConfig.portEnable = GPIOB;
 	pinConfig.pinEnable = GPIO_Pin_5;
 	pinConfig.portRW = GPIOB;
@@ -250,7 +249,6 @@ int main(void)
 		{
 			heartbeat_beat(HEARTBEAT_PORT, HEARTBEAT_PIN);
 			g_lastBeat = millis();
-
 			WLAN_KeepAlive_Loop();
 		}
 
@@ -413,14 +411,8 @@ int main(void)
 					g_lastSocketUpdate = millis();
 				}
 
-				// if (bWatchdog && millis() - g_watchdogMillis > WATCHDOG_UPDATE_DELAY)
-				// {
-				// 	updateWatchdog();
-				// }
-
 				if (!bBroacast && millis() - g_startupMillis > STARTUP_BROADCAST_DELAY)
 				{
-					LED_SetRGBColor(RGB_COLOR_WHITE);
 
 					bBroacast = TRUE;
 					g_broadcastAddress.oct[0] = 224;
@@ -428,10 +420,8 @@ int main(void)
 					g_broadcastAddress.oct[2] = 112;
 					g_broadcastAddress.oct[3] = 113;
 				    g_Identity->broadcast(&g_broadcastAddress, (char *)sComBuff, COM_BUFFSIZE);
-
-				    bWatchdog = TRUE;
-				    //enableWatchdog();
-				    g_watchdogMillis = millis();
+				
+				    Multicast_Presence_Announcement();
 				}
 
 				if (millis() - g_lastSync > ONE_DAY_MILLIS) {
@@ -479,6 +469,8 @@ void Timing_Decrement(void)
 	{
 		TimingDelay--;
 	}
+
+	updateWatchdog();
 
 #if !defined (RGB_NOTIFICATIONS_ON)	&& defined (RGB_NOTIFICATIONS_OFF)
 	//Just needed in case LED_RGB_OVERRIDE is set to 0 by accident

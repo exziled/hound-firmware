@@ -188,32 +188,16 @@ int HoundProto::sendData(uint8_t * sendBuffer, int bufferSize, ipAddr_t * ipAddr
     connectAddress.sa_data[4] = ipAddr->oct[2];
     connectAddress.sa_data[5] = ipAddr->oct[3];
 
-    uint32_t ot = SPARK_WLAN_SetNetWatchDog(S2M(MAX_SEC_WAIT_CONNECT));
-    ret = connect(sendSocket, &connectAddress, sizeof(connectAddress));
-    SPARK_WLAN_SetNetWatchDog(ot);
-
-    if (ret < 0)
-    {
-        #ifdef DEBUG_ON
-        // Alert User
-        HoundDebug::logError(LOG_LOCATION_LCD, -2, "Connection Error");
-        #endif
-
-        // Cleanup and return
-        closesocket(sendSocket);
-        return ret;
-    }
-
     while (sent < bufferSize)
     {
-        ret = ::send(sendSocket, sendBuffer + sent, bufferSize - sent, 0);
+        ret = ::sendto(sendSocket, sendBuffer + sent, bufferSize - sent, 0, &connectAddress, sizeof(sockaddr));
 
         if (ret <= 0)
         {
-            if (ret == -1)
-                LED_SetRGBColor(RGB_COLOR_RED);
-            else 
+            if (ret == 0)
                 LED_SetRGBColor(RGB_COLOR_WHITE);
+            else 
+                LED_SetRGBColor(RGB_COLOR_RED);
             #ifdef DEBUG_ON
             HoundDebug::logError(LOG_LOCATION_LCD, ret, "Send Error");
             #endif

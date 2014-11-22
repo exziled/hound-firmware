@@ -19,6 +19,12 @@ void enableWatchdog(void)
 	IWDG_Enable();
 }
 
+void disableWatchdog(void)
+{
+	/* Enable WWDG clock */
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_WWDG, DISABLE);
+}
+
 void updateWatchdog(void)
 {
 	IWDG_ReloadCounter();

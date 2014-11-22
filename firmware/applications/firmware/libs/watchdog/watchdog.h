@@ -2,6 +2,7 @@
 #define __HOUND_WATCHDOG_H
 
 void enableWatchdog(void);
+void disableWatchdog(void);
 void updateWatchdog(void);
 
 #endif //__HOUND_WATCHDOG_H

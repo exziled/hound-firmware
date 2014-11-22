@@ -345,7 +345,7 @@ void WLAN_Async_Call(long lEventType, char *data, unsigned char length)
 			break;
 
 		case HCI_EVNT_WLAN_ASYNC_PING_REPORT:
-			LED_SetRGBColor(RGB_COLOR_WHITE);
+			//LED_SetRGBColor(RGB_COLOR_WHITE);
 			break;
 	}
 }

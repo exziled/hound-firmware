@@ -21,105 +21,68 @@ int generateNTPRequest(uint8_t * sendBuffer, int sendBufferSize)
 	memset(sendBuffer, 0, NTP_PACKET_SIZE);
 	sendBuffer[0] = 0xe3;
 	sendBuffer[2] = 0x06;
-	sendBuffer[3] = 0xec;
-	sendBuffer[12] = 49;
-	sendBuffer[13] = 0x4E;
-	sendBuffer[14] = 49;
-	sendBuffer[15] = 52;
+	sendBuffer[3] = 0xea;
 
 	return NTP_PACKET_SIZE;
 }
 
 int sendNTPRequest(uint8_t * sendBuffer, int sendBufferSize)
 {
-	int ret, sockHandle, sendHandle, sent;
-	sockaddr sockAddress, sendAddress;
-	socklen_t sockAddressSize = sizeof(sockAddress);
+	int ret, ntpSockHandle, sent;
+	sockaddr ntpSockAddress;
+	socklen_t sockAddressSize = sizeof(ntpSockAddress);
 
-	sockHandle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	// Create new socket and setup recive timeout
+	ntpSockHandle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-	UINT32 timeout_ms = 1000;
-	setsockopt(sockHandle, SOL_SOCKET, SOCKOPT_RECV_TIMEOUT, (void*)&timeout_ms, sizeof(UINT32));
-
-	if (sockHandle == -1)
+	if (ntpSockHandle == -1)
 	{
 		// We couldn't open up a new socket
-		return -1;
+		return -2;
 	}
 
-	// We need to listen on port 123 (ntp) for response froms erver
-	sockAddress.sa_family = AF_INET;
-	sockAddress.sa_data[0] = (123 >> 8 ) & 0xFF;
-	sockAddress.sa_data[1] = (123 & 0xFF);
+	UINT32 timeout_ms = 30000;
+	setsockopt(ntpSockHandle, SOL_SOCKET, SOCKOPT_RECV_TIMEOUT, (void*)&timeout_ms, sizeof(UINT32));
 
-	sockAddress.sa_data[2] = 0;
-	sockAddress.sa_data[3] = 0;
-	sockAddress.sa_data[4] = 0;
-	sockAddress.sa_data[5] = 0;
+	// We need to listen on port 123 (ntp) for response from server
+	ntpSockAddress.sa_family = AF_INET;
+	ntpSockAddress.sa_data[0] = (123 >> 8 ) & 0xFF;
+	ntpSockAddress.sa_data[1] = (123 & 0xFF);
 
-	ret = bind(sockHandle, &sockAddress, sockAddressSize);
+	ntpSockAddress.sa_data[2] = 0;
+	ntpSockAddress.sa_data[3] = 0;
+	ntpSockAddress.sa_data[4] = 0;
+	ntpSockAddress.sa_data[5] = 0;
+
+	// Bind socket to a local port
+	ret = bind(ntpSockHandle, &ntpSockAddress, sockAddressSize);
 
 	// Bind Failure
 	if (ret != 0)
 	{
 		// Close socket and get out of there
-		closesocket(sockHandle);
-		return -1;
+		closesocket(ntpSockHandle);
+		return -3;
 	}
 
-	ret = listen(sockHandle, 1);
-
-	if (ret != 0)
-	{
-		closesocket(sockHandle);
-		return -1;
-	}
-
-	// Listening ready, make request
-	sendHandle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-	if (sendHandle == -1)
-	{
-		closesocket(sockHandle);
-		return -1;
-	}
-
-	sendAddress.sa_family = AF_INET;
-	sendAddress.sa_data[0] = (123 >> 8 ) & 0xFF;
-	sendAddress.sa_data[1] = (123 & 0xFF);
-
-	sendAddress.sa_data[2] = 217;
-	sendAddress.sa_data[3] = 79;
-	sendAddress.sa_data[4] = 179;
-	sendAddress.sa_data[5] = 106;
-
-	// Make connection to NTP server
-	uint32_t ot = SPARK_WLAN_SetNetWatchDog(S2M(MAX_SEC_WAIT_CONNECT));
-    ret = connect(sendHandle, &sendAddress, sizeof(sendAddress));
-    SPARK_WLAN_SetNetWatchDog(ot);
-
-    // Connection error handling
-    if (ret < 0)
-    {
-		closesocket(sockHandle);
-		closesocket(sendHandle);
-		return -1;
-    }
+	ntpSockAddress.sa_data[2] = 198;
+	ntpSockAddress.sa_data[3] = 55;
+	ntpSockAddress.sa_data[4] = 111;
+	ntpSockAddress.sa_data[5] = 5;
 
     // Send data to NTP server
     sent = 0;
     while(sent < NTP_PACKET_SIZE)
     {
-    	ret = send(sendHandle, sendBuffer + sent, NTP_PACKET_SIZE - sent, 0);
+    	ret = sendto(ntpSockHandle, sendBuffer + sent, NTP_PACKET_SIZE - sent, 0, &ntpSockAddress, sockAddressSize);
 
     	sent += ret;
     }
 
-    // Get NTP response
-    ret = recv(sockHandle, sendBuffer, sendBufferSize, 0);
+    // Get response from NTP server
+    ret = recvfrom(ntpSockHandle, sendBuffer, sendBufferSize, 0, &ntpSockAddress, &sockAddressSize);
 
-	closesocket(sockHandle);
-	closesocket(sendHandle);
+	closesocket(ntpSockHandle);
 
 	// Return number of bytes recieved
 	return ret;

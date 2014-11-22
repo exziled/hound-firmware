@@ -131,12 +131,12 @@ extern "C" void SparkCoreConfig(void)
 	RTC_Configuration();
 #endif
 
-        /* Execute Stop mode if STOP mode flag is set via Spark.sleep(pin, mode) */
-        Enter_STOP_Mode();
+        // /* Execute Stop mode if STOP mode flag is set via Spark.sleep(pin, mode) */
+        // Enter_STOP_Mode();
 
-        LED_SetRGBColor(RGB_COLOR_WHITE);
-        LED_On(LED_RGB);
-        SPARK_LED_FADE = 1;
+        // LED_SetRGBColor(RGB_COLOR_WHITE);
+        // LED_On(LED_RGB);
+        // SPARK_LED_FADE = 1;
 
 #ifdef DFU_BUILD_ENABLE
 	Load_SystemFlags();
@@ -279,18 +279,26 @@ int main(void)
 
 		    initADCSPI();
 
-		 //    // Update RealTime Clock
-			// ret = generateNTPRequest(pComBuff, COM_BUFFSIZE);
+		    // Update RealTime Clock
+			ret = generateNTPRequest(pComBuff, COM_BUFFSIZE);
 
-			// if (ret > 0)
-			// {
-			// 	ret = sendNTPRequest(pComBuff, ret);
+			if (ret > 0)
+			{
+				ret = sendNTPRequest(pComBuff, ret);
 
-			// 	if (ret > 0)
-			// 	{
-			// 		parseNTPResponse(pComBuff, ret);
-			// 	}
-			// }
+				if (ret > 0)
+				{
+					parseNTPResponse(pComBuff, ret);
+				} else if (ret == -2){
+					LED_SetRGBColor(RGB_COLOR_RED);
+				} else if (ret == -3) {
+					LED_SetRGBColor(RGB_COLOR_WHITE);
+				} else {
+					LED_SetRGBColor(RGB_COLOR_GREEN);
+				}
+			} else {
+				LED_SetRGBColor(RGB_COLOR_GREEN);
+			}
 			
 			setup_complete = 1;
 

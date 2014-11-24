@@ -168,6 +168,17 @@ int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strRe
 			replySize += Communication::strcat(strResponse + replySize, responseBuffSize - replySize, (char *)"],\0");
 		}
 
+		if (request->rParam & Communication::REQ_A)
+		{
+			replySize += Communication::strcat(strResponse + replySize, responseBuffSize - replySize, (char *)"\"pf\":[\0");
+			for (i = 0; i < dataCount; i++)
+			{
+				replySize += Communication::strcat(strResponse + replySize, responseBuffSize - replySize, rmsAggregation->getAt(i)->pf, i != (dataCount - 1) ? ',' : '\0');
+			}
+			replySize += Communication::strcat(strResponse + replySize, responseBuffSize - replySize, (char *)"],\0");
+		}
+
+
 		// Close JSON array
 		replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "}");
 	}

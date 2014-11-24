@@ -237,6 +237,7 @@ int main(void)
 	// WLAN_On();
 
 	WLAN_Connect();
+	//WLAN_Clear();
 
   	/* Main loop */
 	while (1)
@@ -251,7 +252,7 @@ int main(void)
 
 		if (WLAN_GetStatus() && !setup_complete)
 		{
-			WLAN_Ping_Broadcats();
+			WLAN_Ping_Broadcasts();
 
 			g_Identity = new HoundIdentity;
 			g_Identity->retrieveIdentity();

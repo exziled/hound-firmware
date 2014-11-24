@@ -23,6 +23,7 @@ typedef struct {
 	fixed_t current;
 	fixed_t apparent;
 	fixed_t real;
+	fixed_t pf;
 	uint32_t timestamp;
 } rmsValues_t;
 

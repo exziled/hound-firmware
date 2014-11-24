@@ -158,6 +158,8 @@ void WLAN_KeepAlive_Loop(void)
 	// mDNS packet stops SmartConfig application
 	if (houndWLAN.SMART_CONFIG_STOP && houndWLAN.DHCP && houndWLAN.CONNECTED)
 	{
+		WLAN_Ping_Broadcasts();
+
 		for (int i = 0; i < 3; i++)
 		{
 			mdnsAdvertiser(1, device, strlen(device));
@@ -238,7 +240,7 @@ void WLAN_Ping(ipAddr_t * ipAddress, unsigned long timeout)
 	netapp_ping_send(ip, 2, 64, timeout);
 }
 
-void WLAN_Ping_Broadcats(void)
+void WLAN_Ping_Broadcasts(void)
 {
 	tNetappIpconfigRetArgs ipConfig;
 	ipAddr_t pingAddress;

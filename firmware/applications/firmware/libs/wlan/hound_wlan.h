@@ -44,7 +44,7 @@ void WLAN_Off(void);
 void WLAN_Connect(void);
 void WLAN_Disconnect(void);
 void WLAN_Ping(ipAddr_t ipAddress);
-void WLAN_Ping_Broadcats(void);
+void WLAN_Ping_Broadcasts(void);
 void WLAN_IPConfig(tNetappIpconfigRetArgs * ipConfig);
 uint8_t WLAN_GetStatus(void);
 

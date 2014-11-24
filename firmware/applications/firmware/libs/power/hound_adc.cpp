@@ -222,6 +222,11 @@ extern "C" void TIM3_IRQHandler()
                     rmsValues->real = 0;
                 }
 
+                rmsValues->pf = fixed_div(rmsValues->real, rmsValues->apparent);
+                if ((int32_t)rmsValues->pf < 0)
+                {
+                    rmsValues->pf = 0;
+                }
             }
         }
 

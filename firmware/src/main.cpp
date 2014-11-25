@@ -161,7 +161,7 @@ extern "C" void SparkCoreConfig(void)
 
 #define delayms delay
 
-#define COM_BUFFSIZE 200
+#define COM_BUFFSIZE 400
 
 
 /*******************************************************************************

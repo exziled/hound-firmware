@@ -13,6 +13,8 @@
 static volatile sampleSetup_t * g_sConfig = NULL;
 volatile int g_sActive = 0;
 
+#define NEW_SAMPLE_BOARD
+
 void initADCSPI(void)
 {
     // Configure GPIO Pins for SPI Output
@@ -29,10 +31,10 @@ void initADCSPI(void)
     pinInit.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_Init(GPIOA, &pinInit);
 
-    pinInit.GPIO_Pin = GPIO_Pin_7;
-    pinInit.GPIO_Speed = GPIO_Speed_50MHz;
-    pinInit.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(GPIOA, &pinInit);
+    // pinInit.GPIO_Pin = GPIO_Pin_7;
+    // pinInit.GPIO_Speed = GPIO_Speed_50MHz;
+    // pinInit.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    // GPIO_Init(GPIOA, &pinInit);
 
     // Drive CS High (inactive);
     GPIO_SetBits(GPIOA, GPIO_Pin_4);
@@ -116,11 +118,11 @@ extern "C" void TIM3_IRQHandler()
                  * the channel of this read.  Assume we're going to do the same
                  */
                 while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
-                SPI_I2S_SendData(SPI1, g_sConfig->CurrentSPIAlt);   // Channel of next current sample
+                SPI_I2S_SendData(SPI1, g_sConfig->currentSPIAlt);   // Channel of next current sample
                 while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
                 
                 // Hopefully, recieved data is correct channel
-                temp = SPI_I2S_RecieveData(SPI1);
+                temp = SPI_I2S_ReceiveData(SPI1);
 
                 g_sConfig->currentBuffer[g_sConfig->sampleCount] = fixed(temp);
                 GPIO_SetBits(g_sConfig->currentCSPort, 1 << g_sConfig->currentCSPin);
@@ -131,7 +133,8 @@ extern "C" void TIM3_IRQHandler()
                 SPI_I2S_SendData(SPI1, 0);   // No channels for voltage
                 while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
                 
-                temp = SPI_I2S_RecieveData(SPI1);
+                temp = SPI_I2S_ReceiveData(SPI1);
+                temp >>= 2;
 
                 g_sConfig->voltageBuffer[g_sConfig->sampleCount] = fixed(temp);
                 GPIO_SetBits(g_sConfig->voltageCSPort, 1 << g_sConfig->voltageCSPin);
@@ -172,15 +175,37 @@ extern "C" void TIM3_IRQHandler()
             {
                 rmsValues_t * rmsValues;
 
+                // Make "3.3V"
+                static fixed_t current_mul = fixed(3);
+                current_mul = fixed_mul(current_mul, fixed(11));
+                current_mul = fixed_div(current_mul, fixed(10));
+
                 for (int i = 0; i < g_sConfig->bufferSize; i++)
                 {
+                    // 12 Bit ADC
                     g_sConfig->currentBuffer[i] = fixed_div(g_sConfig->currentBuffer[i], fixed(4095));
-                    g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], fixed(50));
+                    // ADC Representation of 0.95V (our "0" offset);
+                    g_sConfig->currentBuffer[i] = fixed_sub(g_sConfig->currentBuffer[i], fixed(1179));
+                    // 3.3V Input
+                    g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], current_mul);
+
                     g_sConfig->currentBuffer[i] = fixed_div(g_sConfig->currentBuffer[i], fixed(10));
 
-                    g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(4095));
-                    g_sConfig->voltageBuffer[i] = fixed_mul(g_sConfig->voltageBuffer[i], fixed(86 * 5));
+
+                    // g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], fixed(50));
+                    // g_sConfig->currentBuffer[i] = fixed_div(g_sConfig->currentBuffer[i], fixed(10));
+
+                    // "0" Offset is 2.5V
+                    g_sConfig->voltageBuffer[i] = fixed_sub(g_sConfig->voltageBuffer[i], fixed(512));
+                    // 10 Bit ADC
+                    g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(1024));                    
+                    // Scaling and voltage refernce
+                    g_sConfig->voltageBuffer[i] = fixed_mul(g_sConfig->voltageBuffer[i], fixed(30 * 5));
+                    // DSP Scaling
                     g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(100));
+                    //g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(4095));
+                    //g_sConfig->voltageBuffer[i] = fixed_mul(g_sConfig->voltageBuffer[i], fixed(86 * 5));
+                    //g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(100));
                 }
 
                 // Get latest samples

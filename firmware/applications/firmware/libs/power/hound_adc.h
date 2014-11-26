@@ -22,7 +22,7 @@ typedef struct
 	// Current Selection Details
 	GPIO_TypeDef* currentCSPort;
 	uint8_t currentCSPin;
-	uint8_t currentSPIAlt;
+	uint16_t currentSPIAlt;
 } sampleSetup_t;
 
 extern "C"

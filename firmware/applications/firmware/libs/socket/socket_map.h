@@ -11,7 +11,7 @@
 typedef struct {
 	GPIO_TypeDef * currentCSPort;
 	uint8_t currentCSPin;			// GPIO_PinSource
-	uint8_t currentSPIAlt;
+	uint16_t currentSPIAlt;
 	GPIO_TypeDef * voltageCSPort;
 	uint8_t voltageCSPin;			// GPIO_PinSource
 	GPIO_TypeDef * controlPort;
@@ -21,7 +21,7 @@ typedef struct {
 
 static volatile socketMap_t socketMap[] = {
 //	|----Current CS -------|--|------Voltage CS-------|------Control Pin -----|
-	{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource0, NULL},
+	{GPIOA, GPIO_PinSource1, 0x1000, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource0, NULL},
 	{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource1, NULL}
 };
 

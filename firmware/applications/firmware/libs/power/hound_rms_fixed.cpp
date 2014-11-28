@@ -4,6 +4,7 @@
  * @brief Fixed Point RMS Calculation
  *
  * @author Benjamin Carlson
+ * @author Blake Bourque
  *
  * @date Aug 20, 2014
  *
@@ -118,7 +119,7 @@ void calc_rms(fixed_t * samples, int blocksize, fixed_t * result)
         sum += (int64_t)sample[i] * (int64_t)sample[i];
     }
 
-    // Scale back down to Q10.22
+    // Scale back down to QX.FIXED_FRAC
     temp = (fixed_t)(sum >> FIXED_FRAC);
 
     // Average The Sum

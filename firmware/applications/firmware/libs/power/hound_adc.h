@@ -18,11 +18,18 @@
 #ifndef __HOUND_ADC_H
 #define __HOUND_ADC_H
 
+// Standard Libraries
 #include <stdint.h>
-#include "stm32f10x_gpio.h"
+
+// HOUND Libraries
 #include "hound_rms_fixed.h"
 #include "hound_fixed.h"
 
+// ST Libraries
+#include "stm32f10x_gpio.h"
+
+
+// Defines Sampling Blocksize
 #define BLOCKSIZE 200
 
 

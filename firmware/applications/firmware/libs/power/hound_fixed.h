@@ -1,17 +1,39 @@
+/*!
+ * @file hound_fixed.h
+ * 
+ * @brief Library for fixed point math on STM32F0XX series ARM microcontrollers.
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date September 3, 2014
+ * 
+ * Defines type and function definitions to support fixed point math.  Also, defines
+ * number of bits dedicated to representing integer and fractional parts of number.
+ * 
+ * @TODO: Inline functions where appropriate
+ *
+ */
+
 #ifndef __HOUND_FIXED_H
 #define __HOUND_FIXED_H
 
+// Standard Libraries
 #include <stdint.h>
+// HOUND Libraries
+// ST Libraries
+
 
 typedef int32_t fixed_t;
 
+// Number of bits dedicated to representing fractional part.
 #define FIXED_FRAC 16
 #define FIXED_FRAC_MASK (2^FIXED_FRAC) -1
 
 extern "C"
 {
      /**
-      * Fixed Point Addtion
+      * Fixed Point Addition
       * Performs simple fixed point addition requring no additional bit
       * manipulations
       * @param a addition variable

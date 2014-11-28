@@ -1,4 +1,24 @@
+/*!
+ * @file hound_fixed.cpp
+ * 
+ * @brief Library for fixed point math on STM32F0XX series ARM microcontrollers.
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date September 3, 2014
+ * 
+ * Simply functional implementations here.
+ * 
+ *
+ */
+
 #include "hound_fixed.h"
+
+// Standard Libraries
+// HOUND Libraries
+// ST Libraries
+
 
 fixed_t fixed_add(fixed_t a, fixed_t b)
 {

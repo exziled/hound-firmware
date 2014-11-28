@@ -6,7 +6,7 @@
 #include "hound_rms_fixed.h"
 #include "hound_fixed.h"
 
-#define BLOCKSIZE 200
+#define BLOCKSIZE 400
 
 typedef struct
 {

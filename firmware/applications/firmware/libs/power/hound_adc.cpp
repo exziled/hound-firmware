@@ -1,18 +1,39 @@
+/*!
+ * @file hound_adc.cpp
+ * 
+ * @brief HOUND ADC Setup and Sampling Implemntation
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date August 27, 2014
+ * 
+ *
+ * Functional implementation for low level SPI ADC interactions.  Also includes
+ * implementation of TIM3 IRQ Handler, triggering individual samples
+ * 
+ */
+
+// Standard Libraries
 #include <cstddef>
 #include <string.h>
 
+// HOUND Libraries
 #include "hound_adc.h"
 #include "hound_rms_fixed.h"
+
+// ST Libraries
 #include "misc.h"
-#include "hd44780.h"
 #include "stm32f10x_tim.h"
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_rtc.h"
 
+// Shared Interrupt/User Variables
 static volatile sampleSetup_t * g_sConfig = NULL;
 volatile int g_sActive = 0;
 
+// Defines
 #define NEW_SAMPLE_BOARD
 
 void initADCSPI(void)
@@ -30,14 +51,6 @@ void initADCSPI(void)
     pinInit.GPIO_Speed = GPIO_Speed_50MHz;
     pinInit.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_Init(GPIOA, &pinInit);
-
-    // pinInit.GPIO_Pin = GPIO_Pin_7;
-    // pinInit.GPIO_Speed = GPIO_Speed_50MHz;
-    // pinInit.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    // GPIO_Init(GPIOA, &pinInit);
-
-    // Drive CS High (inactive);
-    GPIO_SetBits(GPIOA, GPIO_Pin_4);
 
     // Get SPI Clock Going
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
@@ -90,6 +103,36 @@ void initTIM3(void)
     TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
 
     TIM_Cmd(TIM3, ENABLE);
+}
+
+
+int getSampleBlock(volatile sampleSetup_t * sampleSetup)
+{
+    // First run, don't bother to de-init anything
+    if (g_sConfig != NULL)
+    {
+        // Don't accecpt a new job if current isn't complete
+        if (g_sConfig->bufferSize != g_sConfig->sampleCount)
+        {
+            return -1;
+        } else {
+            g_sActive = 0;
+            // Do De-Init (like the CS pin)
+        }
+    }
+
+    // Pass over the sample struct
+    g_sConfig = sampleSetup;
+
+    // Reset buffer index
+    sampleSetup->sampleCount = 0;
+
+    // Fire away, we'll get an interrupt when it's done
+    // 400 samples @ 24ksps = 1/60 seconds to fill
+    g_sActive = 1;
+
+    // Success, job accecpted
+    return 0;
 }
 
 extern "C" void TIM3_IRQHandler()
@@ -261,33 +304,4 @@ extern "C" void TIM3_IRQHandler()
         }
 
     }
-}
-
-int getSampleBlock(volatile sampleSetup_t * sampleSetup)
-{
-    // First run, don't bother to de-init anything
-    if (g_sConfig != NULL)
-    {
-        // Don't accecpt a new job if current isn't complete
-        if (g_sConfig->bufferSize != g_sConfig->sampleCount)
-        {
-            return -1;
-        } else {
-            g_sActive = 0;
-            // Do De-Init (like the CS pin)
-        }
-    }
-
-    // Pass over the sample struct
-    g_sConfig = sampleSetup;
-
-    // Reset buffer index
-    sampleSetup->sampleCount = 0;
-
-    // Fire away, we'll get an interrupt when it's done
-    // 400 samples @ 24ksps = 1/60 seconds to fill
-    g_sActive = 1;
-
-    // Success, job accecpted
-    return 0;
 }

@@ -1,4 +1,23 @@
+/*!
+ * @file socket_control.cpp
+ * 
+ * @brief HOUND Socket Control Abstraction Implementation
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date November 20, 2014
+ * 
+ * Function abstractions for socket control and data requests
+ * 
+ */
+
+// Standard libraries
+// HOUND Libraries
 #include "socket_control.h"
+// ST Libraries
+#include "stm32f10x_gpio.h"
+
 
 extern volatile socketMap_t socketMap[];
 
@@ -6,8 +25,9 @@ void initializeSocket(uint16_t socket)
 {
 	// Configure GPIO Pins for SPI Output
 	GPIO_InitTypeDef pinInit;
-	/* SPI Current CS Init */
+    // TODO: RCC Init
 
+	/* SPI Current CS Init */
     pinInit.GPIO_Pin = 1 << socketMap[socket].currentCSPin;
     pinInit.GPIO_Speed = GPIO_Speed_50MHz;
     pinInit.GPIO_Mode = GPIO_Mode_Out_PP;

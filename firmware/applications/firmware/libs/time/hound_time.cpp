@@ -1,12 +1,32 @@
+/*!
+ * @file hound_time.cpp
+ * 
+ * @brief HOUND NTP Sync Function Implementations
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date November 13, 2014
+ * 
+ * NTP Time sync library to manage initial request, return values, and updating
+ * real time clock with updated time data.
+ * 
+ */
+
 #include "hound_time.h"
 
+// Standard Libraries
+#include <string.h>
+// HOUND Libraries
+// ST Libraries
+#include "stm32f10x_rtc.h"
+// CC3000 Libraries
 #include "data_types.h"
 #include "socket.h"
+
+ // These Need to be Phased Out
 #include "spark_wlan.h"
 #include "spark_macros.h"
-
-#include <string.h>
-#include "stm32f10x_rtc.h"
 
 #define NTP_PACKET_SIZE 48
 

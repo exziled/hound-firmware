@@ -44,7 +44,7 @@ AggregatedRMS::~AggregatedRMS()
 }
 
 // This is borken, memset doesn't work like that
-void AggregatedRMS::pushBack(fixed_t * result)
+void AggregatedRMS::pushBack(rmsValues_t * result)
 {
     // if (++head - results > size)
     // {

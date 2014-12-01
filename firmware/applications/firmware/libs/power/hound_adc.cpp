@@ -179,8 +179,8 @@ extern "C" void TIM3_IRQHandler()
                 while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
                 
                 temp = SPI_I2S_ReceiveData(SPI1);
-                temp = temp >> 2;
-                temp = temp & 0x3FF;
+                temp = temp >> 3;
+                // temp = temp & 0x3FF;
 
                 g_sConfig->voltageBuffer[g_sConfig->sampleCount] = fixed(temp);
                 GPIO_SetBits(g_sConfig->voltageCSPort, 1 << g_sConfig->voltageCSPin);
@@ -248,7 +248,7 @@ extern "C" void TIM3_IRQHandler()
                     // 10 Bit ADC
                     g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(1024));                    
                     // Scaling and voltage refernce
-                    g_sConfig->voltageBuffer[i] = fixed_mul(g_sConfig->voltageBuffer[i], fixed(78 * 5));
+                    g_sConfig->voltageBuffer[i] = fixed_mul(g_sConfig->voltageBuffer[i], fixed(72 * 5));
                     // DSP Scaling
                     g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(100));
                     //g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(4095));

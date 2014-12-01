@@ -408,6 +408,14 @@ int main(void)
 				{
 					buffSendSize = Communication::parseRequest(&g_fastSubRequest, 1, (char *)sComBuff, COM_BUFFSIZE, g_Identity);
 					Communication::HoundProto::sendData(sComBuff, buffSendSize, &g_fastSubAddress);
+
+					// int size = 0, i = 0;;
+					// while (i < BLOCKSIZE && size < COM_BUFFSIZE)
+					// {
+					// 	size += Communication::strcat((char *)sComBuff + size, COM_BUFFSIZE - size, primarySample->voltageBuffer[i++], ',');
+					// }
+
+					// Communication::HoundProto::sendData(sComBuff, size, &g_fastSubAddress);
 					
 					g_lastSocketUpdate = millis();
 				}

@@ -19,6 +19,7 @@
 // Standard Libraries
 #include <cstddef>
 // HOUND Libraries
+#include "hound_def.h"
 #include "hound_rms_fixed.h"
 // ST Libraries
 #include "stm32f10x_gpio.h"
@@ -41,11 +42,20 @@ typedef struct {
 	AggregatedRMS * rmsResults;		// Storage of calculated values
 } socketMap_t;
 
-// Actual Socket Map.  Can not be const as initilization function sets storage buffer.
-static volatile socketMap_t socketMap[] = {
-//	|----Current CS -------|--------|------Voltage CS-------|------Control Pin -----| --- Storage --- |
-	{GPIOA, GPIO_PinSource1, 0x1000, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource0, NULL},
-	{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource1, NULL}
-};
+
+#ifdef NEW_SAMPLE_BOARD
+	// Actual Socket Map.  Can not be const as initilization function sets storage buffer.
+	static volatile socketMap_t socketMap[] = {
+	//	|----Current CS -------|--------|------Voltage CS-------|------Control Pin -----| --- Storage --- |
+		{GPIOA, GPIO_PinSource1, 0x1000, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource0, NULL},
+		{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource1, NULL}
+	};
+#else 
+	static volatile socketMap_t socketMap[] = {
+	//	|----Current CS -------|--------|------Voltage CS-------|------Control Pin -----| --- Storage --- |
+		{GPIOA, GPIO_PinSource1, 0x1000, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource0, NULL},
+		{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource1, NULL}
+	};
+#endif
 
 #endif //__HOUND_SOCKET_MAP

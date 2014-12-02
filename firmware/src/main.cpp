@@ -48,6 +48,7 @@
 #include "socket_control.h"
 
 #include "heartbeat.h"
+#include "hound_alignment.h"
 
 #include "stm32f10x_gpio.h"
 

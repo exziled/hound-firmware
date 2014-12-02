@@ -225,12 +225,16 @@ extern "C" void TIM3_IRQHandler()
                 current_mul = fixed_mul(current_mul, fixed(11));
                 current_mul = fixed_div(current_mul, fixed(10));
 
+                fixed_t current_offset = fixed(alignHOUND_currentReference(4095) + 190);
+                current_offset = fixed_mul(current_offset, 4);
+                current_offset = fixed_div(current_offset, 10);
+
                 for (int i = 0; i < g_sConfig->bufferSize; i++)
                 {
                     #ifdef NEW_SAMPLE_BOARD
                         // Current
                         // ADC Representation of 0.95V (our "0" offset);
-                        g_sConfig->currentBuffer[i] = fixed_sub(g_sConfig->currentBuffer[i], fixed(alignHOUND_currentReference(4095)));
+                        g_sConfig->currentBuffer[i] = fixed_sub(g_sConfig->currentBuffer[i], current_offset);
                         // // 12 Bit ADC
                         g_sConfig->currentBuffer[i] = fixed_div(g_sConfig->currentBuffer[i], fixed(4095));
                         // 3.3V Input

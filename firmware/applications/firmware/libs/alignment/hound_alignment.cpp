@@ -4,7 +4,7 @@
 #include "stm32f10x_adc.h"
 
 // Currently using PA0/ADC_12_IN0
-int16_t alignHOUND_currentReference(bool reSample)
+int16_t alignHOUND_currentReference(uint32_t bits, bool reSample)
 {
 	static int16_t reference = -1;
 
@@ -23,7 +23,7 @@ int16_t alignHOUND_currentReference(bool reSample)
 
 	// Ensure ADC Clock is Enabled
 	RCC_ADCCLKConfig (RCC_PCLK2_Div6);
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC2, ENABLE);
 
 	ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
 	ADC_InitStructure.ADC_ScanConvMode = ENABLE;
@@ -32,27 +32,33 @@ int16_t alignHOUND_currentReference(bool reSample)
 	ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
 	ADC_InitStructure.ADC_NbrOfChannel = 1;
 
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_12, 1, ADC_SampleTime_28Cycles5); // define regular conversion config
-	ADC_Init (ADC1, &ADC_InitStructure);   //set config of ADC1
+	ADC_RegularChannelConfig(ADC2, ADC_Channel_0, 1, ADC_SampleTime_28Cycles5); // define regular conversion config
+	ADC_Init (ADC2, &ADC_InitStructure);   //set config of ADC2
 	
-	ADC_Cmd (ADC1, ENABLE);  //enable ADC1
+	ADC_Cmd (ADC2, ENABLE);  //enable ADC2
 
-	ADC_ResetCalibration(ADC1);
-	while(ADC_GetResetCalibrationStatus(ADC1));
-	ADC_StartCalibration(ADC1);
-	while(ADC_GetCalibrationStatus(ADC1));
+	ADC_ResetCalibration(ADC2);
+	while(ADC_GetResetCalibrationStatus(ADC2));
+	ADC_StartCalibration(ADC2);
+	while(ADC_GetCalibrationStatus(ADC2));
 
 	// start conversion
-	ADC_Cmd (ADC1, ENABLE);  
+	ADC_Cmd (ADC2, ENABLE);  
 
-	ADC_SoftwareStartConvCmd(ADC1, ENABLE);
+	ADC_SoftwareStartConvCmd(ADC2, ENABLE);
 
-	while( ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET )
+	while( ADC_GetFlagStatus(ADC2, ADC_FLAG_EOC) == RESET )
 	{
 	    // do nothing (or something useful perhaps)
 	}
 
-	reference = ADC_GetConversionValue(ADC1);
+	reference = ADC_GetConversionValue(ADC2);
+
+	// ADC is 12 Bits, normalize if requested
+	if (bits != 4095)
+	{
+		reference = (reference * bits)/4095;
+	}
 
 	return reference;
 }

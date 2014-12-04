@@ -1,35 +1,35 @@
+/*!
+ * @file com_command.pp
+ * 
+ * @brief HOUND Communication Parsing Libraries
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date October 1, 2014
+ * 
+ *
+ * Functional implementation for communication request/command parsing and response generation.
+ * 
+ */
+
 #include "com_command.h"
 
+// Standard Libraries
 #include <cstddef>
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
-
+// HOUND Libraries
 #include "hound_debug.h"
-
 #include "socket_control.h"
 #include "hound_rms_fixed.h"
+// ST Libraries
+
 
 // G++ doesn't like constant strings
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
-
-// We should make this return something someday
-// Assumes ports commands are executed on have already been initialized (which isn't unfair)
-// Should we define an array of "valid" ports so you can't arbitarily command things here
-// All commands transmitted in format:
-// 16 bits
-// 16     12     8          1
-// | ---- | ---- | -------- |
-//   port   pin    operation 
-
-// 8 bits
-// 8      4      1
-// | ---- | ---- | 
-//  socket   op
-// EX:
-// Data 0xA401
-// Performs Operation (0x01) on Port A, Pin 4
 int Communication::parseCommand(uint8_t * arrCommands, int count, char * strResponse, int responseBuffSize, uint8_t reference)
 {
 	int replySize = 0;
@@ -74,16 +74,6 @@ int Communication::parseCommand(uint8_t * arrCommands, int count, char * strResp
 	return replySize;
 }
 
-// Maybe in the future, we can support data across multiple sockets
-// thus, we have an array of requests as opposed to a single request
-
-// 16        12        8          1
-// | ------- | ------- | -------- |
-//   sock_id   count*    paramters
-// Socket ID - Future Use - When multiple sample sockets are tied to a single core
-// sample count - Supports All 0xF or Single 0x00
-// Parameters -  
-// all these snprintfs probably aren't that efficient
 int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strResponse, int responseBuffSize, HoundIdentity * identity)
 {
 	int i=0, j=0, replySize = 0;

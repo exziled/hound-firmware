@@ -1,12 +1,29 @@
+/*!
+ * @file com_proto.cpp
+ * 
+ * @brief HOUND Communication Libraries
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date October 1, 2014
+ * 
+ *
+ * Definitions for socket based network communication.
+ * 
+ */
+
 #include "com_proto.h"
 
+// Standard Libraries
 #include <string.h>
 #include <stdlib.h>
-
+// HOUND Libraries
 #include "hound_debug.h"
+// ST Libraries
+// TODO: REMOVE
 #include "spark_wlan.h"
 #include "spark_macros.h"
-
 #include "rgbled.h"
 
 

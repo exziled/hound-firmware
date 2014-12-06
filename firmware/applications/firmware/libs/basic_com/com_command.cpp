@@ -22,6 +22,7 @@
 #include <math.h>
 // HOUND Libraries
 #include "hound_debug.h"
+#include "com_strings.h"
 #include "socket_control.h"
 #include "hound_rms_fixed.h"
 // ST Libraries

@@ -37,6 +37,7 @@
 #include "websocket.h"
 #include "com_proto.h"
 #include "com_command.h"
+#include "com_subscription.h"
 #include "hd44780.h"
 #include "hound_adc.h"
 #include "hound_fixed.h"
@@ -186,9 +187,14 @@ int main(void)
 	unsigned long g_lastUpdate = millis();
 	unsigned long g_lastSocketUpdate = millis();
 	unsigned long g_startupMillis = millis();
-	unsigned long g_watchdogMillis = millis();
 
 	/* Variable Definitions */
+
+	uint8_t reference = 0;
+	uint8_t operation = 0;
+	uint8_t * recvBuff = NULL;
+
+	int recieveSize = 0;
 
 	// Communication Buffers
 	uint8_t * pComBuff;
@@ -196,12 +202,9 @@ int main(void)
 	int buffSendSize;
 
 	// Communication Support
-	WebSocket * g_sampleSocket = NULL;
+	Subscription * g_Subscription = NULL;
+	Subscription * g_FastSubscription = NULL;
 	Communication::ipAddr_t recvAddress;
-	Communication::hRequest_t g_subscriptionRequest;
-	Communication::hRequest_t g_fastSubRequest;
-	Communication::ipAddr_t g_subscriptionAddress;
-	Communication::ipAddr_t g_fastSubAddress;
 	Communication::ipAddr_t g_broadcastAddress;
 	Communication::HoundProto * com_demo;
 
@@ -271,13 +274,6 @@ int main(void)
 		    pComBuff = (uint8_t *)malloc(COM_BUFFSIZE);
 		    sComBuff = (uint8_t *)malloc(COM_BUFFSIZE);
 
-		    // Node 0 (unimplemented) and All sampels
-		    g_subscriptionRequest.rNode = 0x0F;
-		    g_subscriptionRequest.rParam = 0xFF;
-
-		    g_fastSubRequest.rNode = 0x00;
-		    g_fastSubRequest.rParam = 0xFF;
-
 		    initADCSPI();
 
 		    // Update RealTime Clock
@@ -322,14 +318,24 @@ int main(void)
 				// Command Loop
 				if (millis() - g_lastConnectionCheck > CONNECTION_CHECK_MILLIS)
 				{
-					ret = com_demo->getData(pComBuff, COM_BUFFSIZE, &recvAddress);
+					recieveSize = com_demo->getData(pComBuff, COM_BUFFSIZE, &recvAddress);
 
-					// Task handling loop
-					uint8_t reference = pComBuff[0];
-					uint8_t operation = pComBuff[1];
-
-					if (ret > 0)
+					// 
+					if (recieveSize > 0)
 					{
+						// More than 2 values recieved, we hopefully have a correctly formulated packet
+						if (recieveSize > 2)
+						{
+							reference = pComBuff[0];
+							operation = pComBuff[1];
+							recvBuff = pComBuff + 2;
+
+							// We only care about parseable data now
+							recieveSize -= 2;
+						} else {
+							continue;
+						}
+
 						// DEMO for now, after we get one ping from the server, a "subscription"
 						// will be made, triggering the core to send updates every 10seconds
 						#ifdef DEBUG_ON
@@ -340,7 +346,7 @@ int main(void)
 						if (operation == 0x00)
 						{
 							// Process Socket Data Operation
-							buffSendSize = Communication::parseRequest((Communication::hRequest_t *)(pComBuff + 2), (ret-2) / sizeof(Communication::hRequest_t), (char *)sComBuff, COM_BUFFSIZE, g_Identity);
+							buffSendSize = Communication::parseRequest((Communication::hRequest_t *)(recvBuff), recieveSize/sizeof(Communication::hRequest_t), (char *)sComBuff, COM_BUFFSIZE, g_Identity);
 							
 							// Server Reply
 							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
@@ -349,28 +355,38 @@ int main(void)
 						else if (operation & 0x01)
 						{
 							// Process Socket Operation
-							buffSendSize = Communication::parseCommand((uint8_t *)(pComBuff + 2), (ret-2) / sizeof(uint8_t), (char *)sComBuff, COM_BUFFSIZE, reference);
+							buffSendSize = Communication::parseCommand((uint8_t *)(recvBuff), recieveSize/sizeof(uint8_t), (char *)sComBuff, COM_BUFFSIZE, reference);
 
 							// Server Reply
 							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
 						} 
 
 						// Subscription Request
+						// Subscription request should be made in format similar to single data request, indicating
+						// to the core which sockets/which values should be sent back to the server
 						else if (operation & 0x02)
 						{
-							g_subscriptionAddress.oct[0] = recvAddress.oct[0];
-							g_subscriptionAddress.oct[1] = recvAddress.oct[1];
-							g_subscriptionAddress.oct[2] = recvAddress.oct[2];
-							g_subscriptionAddress.oct[3] = recvAddress.oct[3];
+							// Create subscription if none exists
+							if (g_Subscription == NULL)
+							{
+								g_Subscription = new Subscription(&recvAddress, sComBuff, COM_BUFFSIZE, g_Identity);
+								
+								Communication::hRequest_t * subscriptionSockets = (Communication::hRequest_t *)recvBuff;
 
-							g_subscriptionEnabled = true;
+								for (uint8_t i = 0; i < recieveSize/sizeof(Communication::hRequest_t); i++)
+								{
+									g_Subscription->addSocket(subscriptionSockets->rNode, subscriptionSockets->rParam);
+								}
+							}
 
+							// Send back response
 							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"sub\",\"result\":1}", reference);
-
 							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
 
 						} 
 						// Websocket Connection Request
+
+						// TODO: Originally, websocket [2] was used to indicate cancelation
 						else if (operation & 0x04)
 						{
 							if (pComBuff[2] == 1)
@@ -379,10 +395,10 @@ int main(void)
 
 							} else {
 
-								g_fastSubAddress.oct[0] = recvAddress.oct[0];
-								g_fastSubAddress.oct[1] = recvAddress.oct[1];
-								g_fastSubAddress.oct[2] = recvAddress.oct[2];
-								g_fastSubAddress.oct[3] = recvAddress.oct[3];
+								// g_fastSubAddress.oct[0] = recvAddress.oct[0];
+								// g_fastSubAddress.oct[1] = recvAddress.oct[1];
+								// g_fastSubAddress.oct[2] = recvAddress.oct[2];
+								// g_fastSubAddress.oct[3] = recvAddress.oct[3];
 
 								bSampleSocket = TRUE;
 							}
@@ -396,18 +412,17 @@ int main(void)
 					g_lastConnectionCheck = millis();
 				}
 
-				if (g_subscriptionEnabled && millis() - g_lastUpdate > UPDATE_INTERVAL_MILLS) {
+				if (g_Subscription != NULL && millis() - g_lastUpdate > UPDATE_INTERVAL_MILLS) {
 
-					buffSendSize = Communication::parseRequest(&g_subscriptionRequest, 1, (char *)sComBuff, COM_BUFFSIZE, g_Identity);
-					Communication::HoundProto::sendData(sComBuff, buffSendSize, &g_subscriptionAddress);
+					g_Subscription->sendSubscription();
 
 					g_lastUpdate = millis();
 				}
 
 				if ((bSampleSocket) && (millis() - g_lastSocketUpdate) > SOCKET_UPDATE_INTERVAL_MILLS)
 				{
-					buffSendSize = Communication::parseRequest(&g_fastSubRequest, 1, (char *)sComBuff, COM_BUFFSIZE, g_Identity);
-					Communication::HoundProto::sendData(sComBuff, buffSendSize, &g_fastSubAddress);
+					// buffSendSize = Communication::parseRequest(&g_fastSubRequest, 1, (char *)sComBuff, COM_BUFFSIZE, g_Identity);
+					// Communication::HoundProto::sendData(sComBuff, buffSendSize, &g_fastSubAddress);
 					
 					g_lastSocketUpdate = millis();
 				}

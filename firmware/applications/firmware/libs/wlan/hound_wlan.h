@@ -48,10 +48,22 @@ typedef struct
 #define SMART_CONFIG_EXTI EXTI_Line7
 #define SMART_CONFIG_NVIC EXTI9_5_IRQn
 
+// WLAN State Machine variable
 // Volatile due to interrupts
 static volatile houndWLAN_t houndWLAN = {0, 0, 0, 0, 0, 0, 0, 0};
 
+
+/*!
+* @brief Inititilze CC3000 interface
+* 
+* Initilizes CC3000 SPI/DMA interfaces configures SmartConfig interrupts
+* and begins CC3000 operation per TI's standard driver
+*
+* @returns	 Nothing 
+*/
 void WLAN_Initialize(void);
+
+
 void WLAN_On(void);
 void WLAN_Off(void);
 void WLAN_Connect(void);

@@ -16,7 +16,14 @@
 #ifndef __HOUND_COMSTRINGS_H
 #define __HOUND_COMSTRINGS_H
 
-namespace Communcation
+// Standard Libraries
+#include <stdint.h>
+#include <string.h>
+// HOUND Libraries
+#include "hound_fixed.h"
+// ST Libraries
+
+namespace Communication
 {
 	/*!
 	 * @brief Append one string to the end of another
@@ -69,3 +76,5 @@ namespace Communcation
 	int integerPower(int base, int exp);
 	int integerPlaces(int n);
 }
+
+#endif //__HOUND_COMSTRINGS_H

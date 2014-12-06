@@ -50,7 +50,7 @@ namespace Communication
 	 * CMD_DATA - Query socket state
 	 * 
 	 */
-	enum cmdOperations {CMD_ON = 0x0, CMD_OFF = 0x01, CMD_DATA = 0x02}
+	enum cmdOperations {CMD_ON = 0x0, CMD_OFF = 0x01, CMD_DATA = 0x02};
 
 	/*!
 	 * @brief Parse incoming HOUND Command

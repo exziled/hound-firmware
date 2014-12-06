@@ -1,3 +1,18 @@
+/*!
+ * @file com_proto.h
+ * 
+ * @brief HOUND Communication Libraries
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date October 1, 2014
+ * 
+ *
+ * Definitions for socket based network communication.
+ * 
+ */
+
 #ifndef __HOUND_COM_H
 #define __HOUND_COM_H
 
@@ -19,6 +34,8 @@ namespace Communication
 		uint8_t oct[4];
 	} ipAddr_t;
 
+
+	
 	class HoundProto
 	{
 	public:

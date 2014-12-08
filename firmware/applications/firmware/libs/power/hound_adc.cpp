@@ -19,8 +19,10 @@
 #include <string.h>
 
 // HOUND Libraries
+#include "hound_def.h"
 #include "hound_adc.h"
 #include "hound_rms_fixed.h"
+#include "hound_alignment.h"
 
 // ST Libraries
 #include "misc.h"
@@ -32,9 +34,6 @@
 // Shared Interrupt/User Variables
 static volatile sampleSetup_t * g_sConfig = NULL;
 volatile int g_sActive = 0;
-
-// Defines
-#define NEW_SAMPLE_BOARD
 
 void initADCSPI(void)
 {
@@ -179,8 +178,8 @@ extern "C" void TIM3_IRQHandler()
                 while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
                 
                 temp = SPI_I2S_ReceiveData(SPI1);
-                temp = temp >> 2;
-                temp = temp & 0x3FF;
+                temp = temp >> 3;
+                // temp = temp & 0x3FF;
 
                 g_sConfig->voltageBuffer[g_sConfig->sampleCount] = fixed(temp);
                 GPIO_SetBits(g_sConfig->voltageCSPort, 1 << g_sConfig->voltageCSPin);
@@ -228,31 +227,38 @@ extern "C" void TIM3_IRQHandler()
 
                 for (int i = 0; i < g_sConfig->bufferSize; i++)
                 {
-                     // ADC Representation of 0.95V (our "0" offset);
-                    g_sConfig->currentBuffer[i] = fixed_sub(g_sConfig->currentBuffer[i], fixed(1177));
-                    // // 12 Bit ADC
-                    g_sConfig->currentBuffer[i] = fixed_div(g_sConfig->currentBuffer[i], fixed(4095));
-                    // 3.3V Input
-                    g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], current_mul);
+                    #ifdef NEW_SAMPLE_BOARD
+                        // Current
+                        // ADC Representation of 0.95V (our "0" offset);
+                        g_sConfig->currentBuffer[i] = fixed_sub(g_sConfig->currentBuffer[i], fixed(alignHOUND_currentReference(4095)));
+                        // // 12 Bit ADC
+                        g_sConfig->currentBuffer[i] = fixed_div(g_sConfig->currentBuffer[i], fixed(4095));
+                        // 3.3V Input
+                        g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], current_mul);
 
-                    g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], fixed(25));
+                        g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], fixed(25));
 
-                    g_sConfig->currentBuffer[i] = fixed_div(g_sConfig->currentBuffer[i], fixed(10));
+                        g_sConfig->currentBuffer[i] = fixed_div(g_sConfig->currentBuffer[i], fixed(10));
 
+                        // Voltage
+                        // "0" Offset is 2.5V
+                        g_sConfig->voltageBuffer[i] = fixed_sub(g_sConfig->voltageBuffer[i], fixed(512));
+                        // 10 Bit ADC
+                        g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(1024));                    
+                        // Scaling and voltage refernce
+                        g_sConfig->voltageBuffer[i] = fixed_mul(g_sConfig->voltageBuffer[i], fixed(72 * 5));
+                        // DSP Scaling
+                        g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(100));
 
-                    // g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], fixed(50));
-                    // g_sConfig->currentBuffer[i] = fixed_div(g_sConfig->currentBuffer[i], fixed(10));;
+                    #else            
+                        g_sConfig->currentBuffer[i] = fixed_div(g_sConfig->currentBuffer[i], fixed(4095));
+                        g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], fixed(50));
+                        g_sConfig->currentBuffer[i] = fixed_div(g_sConfig->currentBuffer[i], fixed(10));
 
-                    // "0" Offset is 2.5V
-                    g_sConfig->voltageBuffer[i] = fixed_sub(g_sConfig->voltageBuffer[i], fixed(512));
-                    // 10 Bit ADC
-                    g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(1024));                    
-                    // Scaling and voltage refernce
-                    g_sConfig->voltageBuffer[i] = fixed_mul(g_sConfig->voltageBuffer[i], fixed(78 * 5));
-                    // DSP Scaling
-                    g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(100));
-                    //g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(4095));
-                    //g_sConfig->voltageBuffer[i] = fixed_mul(g_sConfig->voltageBuffer[i], fixed(86 * 5));
+                        g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(4095));
+                        g_sConfig->voltageBuffer[i] = fixed_mul(g_sConfig->voltageBuffer[i], fixed(86 * 5));
+                        g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(100));
+                    #endif
                     
                 }
 

@@ -67,6 +67,13 @@ void socketToggleState(uint16_t socket);
 uint8_t socketGetState(uint16_t socket);
 
 /*!
+ * @brief Retrun number of sockets currently mapped
+ * 
+ * @returns	 		Number of sockets stored in socket map
+ */
+uint8_t socketGetCount(void);
+
+/*!
  * @brief Return socketMap struct from array
  * 
  * @param[in] int   Socket index, from socketMap, of socket to modify

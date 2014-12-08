@@ -423,6 +423,14 @@ int main(void)
 				{
 					// buffSendSize = Communication::parseRequest(&g_fastSubRequest, 1, (char *)sComBuff, COM_BUFFSIZE, g_Identity);
 					// Communication::HoundProto::sendData(sComBuff, buffSendSize, &g_fastSubAddress);
+
+					// int size = 0, i = 0;;
+					// while (i < BLOCKSIZE && size < COM_BUFFSIZE)
+					// {
+					// 	size += Communication::strcat((char *)sComBuff + size, COM_BUFFSIZE - size, primarySample->voltageBuffer[i++], ',');
+					// }
+
+					// Communication::HoundProto::sendData(sComBuff, size, &g_fastSubAddress);
 					
 					g_lastSocketUpdate = millis();
 				}
@@ -453,16 +461,23 @@ int main(void)
 void RTC_IRQHandler(void)
 {
 	static int sampleIntervalCount = 0;
+	static const uint8_t socket_count = socketGetCount();
+	static uint8_t socket = 0;
 
 	if(RTC_GetITStatus(RTC_IT_SEC) != RESET)
 	{
 		/* Clear the RTC Second Interrupt pending bit */
 		RTC_ClearITPendingBit(RTC_IT_SEC);
 
+		if (socket >= socket_count)
+		{
+			socket = 0;
+		}
+
 		// Trigger voltage/current sampling once every SAMPLE_INTERVAL seconds
 		if (primarySample != NULL && sampleIntervalCount++ >= SAMPLE_INTERVAL)
 		{
-			volatile socketMap_t * socketSample = socketGetStruct(0);
+			volatile socketMap_t * socketSample = socketGetStruct(socket++);
 
 			primarySample->voltageCSPort = socketSample->voltageCSPort;
 			primarySample->voltageCSPin = socketSample->voltageCSPin;
@@ -472,6 +487,7 @@ void RTC_IRQHandler(void)
 			primarySample->rmsResults = socketSample->rmsResults;
 
 			int ret = getSampleBlock(primarySample);
+			
 			if (ret < 0)
 			{
 				LED_SetRGBColor(RGB_COLOR_RED);

@@ -1,13 +1,29 @@
+/*!
+ * @file hound_wlan.h
+ * 
+ * @brief HOUND WLAN Control Header
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date November 20, 2014
+ * 
+ * Manages WiFi connection, status, and any async callbacks.
+ * 
+ */
+
 #ifndef __HOUND_WLAN_H
 #define __HOUND_WLAN_H
 
+// Standard Libraries
 #include <stdint.h>
-#include "misc.h"
-
-#include "netapp.h"
-
+// HOUND Libraries
+// ST Libraries
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_exti.h"
+// CC3000 Libraries
+#include "misc.h"
+#include "netapp.h"
 
 
 typedef struct {
@@ -32,13 +48,22 @@ typedef struct
 #define SMART_CONFIG_EXTI EXTI_Line7
 #define SMART_CONFIG_NVIC EXTI9_5_IRQn
 
+// WLAN State Machine variable
 // Volatile due to interrupts
 static volatile houndWLAN_t houndWLAN = {0, 0, 0, 0, 0, 0, 0, 0};
 
-extern unsigned char WLANProfileIndex;
-extern unsigned char NVMEM_File_Data[];
 
+/*!
+* @brief Inititilze CC3000 interface
+* 
+* Initilizes CC3000 SPI/DMA interfaces configures SmartConfig interrupts
+* and begins CC3000 operation per TI's standard driver
+*
+* @returns	 Nothing 
+*/
 void WLAN_Initialize(void);
+
+
 void WLAN_On(void);
 void WLAN_Off(void);
 void WLAN_Connect(void);
@@ -62,8 +87,6 @@ char *WLAN_Driver_Patch(unsigned long *length);
 char *WLAN_BootLoader_Patch(unsigned long *length);
 void Set_NetApp_Timeout(void);
 uint32_t SPARK_WLAN_SetNetWatchDog(uint32_t timeOutInuS);
-void SPARK_WLAN_SmartConfigProcess();
-void WLAN_SetCredentials(char *ssid, unsigned int ssidLen, char *password, unsigned int passwordLen, unsigned long security);
 
 // Get SSID
 // Get MAC

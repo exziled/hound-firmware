@@ -1,35 +1,36 @@
+/*!
+ * @file com_command.pp
+ * 
+ * @brief HOUND Communication Parsing Libraries
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date October 1, 2014
+ * 
+ *
+ * Functional implementation for communication request/command parsing and response generation.
+ * 
+ */
+
 #include "com_command.h"
 
+// Standard Libraries
 #include <cstddef>
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
-
+// HOUND Libraries
 #include "hound_debug.h"
-
+#include "com_strings.h"
 #include "socket_control.h"
 #include "hound_rms_fixed.h"
+// ST Libraries
+
 
 // G++ doesn't like constant strings
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
-
-// We should make this return something someday
-// Assumes ports commands are executed on have already been initialized (which isn't unfair)
-// Should we define an array of "valid" ports so you can't arbitarily command things here
-// All commands transmitted in format:
-// 16 bits
-// 16     12     8          1
-// | ---- | ---- | -------- |
-//   port   pin    operation 
-
-// 8 bits
-// 8      4      1
-// | ---- | ---- | 
-//  socket   op
-// EX:
-// Data 0xA401
-// Performs Operation (0x01) on Port A, Pin 4
 int Communication::parseCommand(uint8_t * arrCommands, int count, char * strResponse, int responseBuffSize, uint8_t reference)
 {
 	int replySize = 0;
@@ -74,16 +75,6 @@ int Communication::parseCommand(uint8_t * arrCommands, int count, char * strResp
 	return replySize;
 }
 
-// Maybe in the future, we can support data across multiple sockets
-// thus, we have an array of requests as opposed to a single request
-
-// 16        12        8          1
-// | ------- | ------- | -------- |
-//   sock_id   count*    paramters
-// Socket ID - Future Use - When multiple sample sockets are tied to a single core
-// sample count - Supports All 0xF or Single 0x00
-// Parameters -  
-// all these snprintfs probably aren't that efficient
 int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strResponse, int responseBuffSize, HoundIdentity * identity)
 {
 	int i=0, j=0, replySize = 0;
@@ -184,97 +175,4 @@ int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strRe
 	}
 
 	return replySize;
-}
-
-int Communication::strcat(char * strDest, uint16_t buffSize, uint32_t concat, char delim)
-{
-	return snprintf(strDest, buffSize, "%ld%c", concat, delim);
-}
-
-int Communication::strcat(char * strDest, uint16_t buffSize, fixed_t concat, char delim)
-{
-	int temp, powers_10;
-
-	temp = fixed_integer(concat);
-	powers_10 = integerPlaces(temp);
-
-    int i, j, factor;
-
-    for (i = 0; i < powers_10; i++)
-    {
-        factor = integerPower(10, (powers_10 - i -1));
-        strDest[i] = 48 + (temp / factor);
-        temp -= factor * (temp / factor);
-    }
-
-    strDest[i++] = '.';
-
-    temp = fixed_fractional(concat);
-    //powers_10 = integerPlaces(temp);
-    // Only care about 3 decimal places
-    powers_10 = 3;
-
-    for (j = 0; j < powers_10; j++)
-    {
-    	// We always expect 3 decimal places, deal 
-    	if (j == 0 && powers_10 < 3)
-    	{
-			strDest[i+j] = 48;
-			i++;
-    	}
-
-    	factor = integerPower(10, (powers_10 - j -1));
-    	strDest[i + j] = 48 + (temp / factor);
-    	temp -= factor * (temp / factor);
-    }
-
-    if (delim != '\0')
-    {
-   		strDest[i + j++] = delim;
-    }
-
-	return i + j;
-}
-
-int Communication::strcat(char * strDest, uint16_t buffSize, char * strSrc)
-{
-	int srcSize = strlen(strSrc);
-
-	//if (srcSize < buffSize)
-	//{
-		//::strcat(strDest-1, strSrc);
-
-		return snprintf(strDest, buffSize, strSrc);
-	//}
-
-	//return 0;
-}
-
-int Communication::integerPower(int base, int exp)
-{
-    int result = 1;
-    while (exp)
-    {
-        if (exp & 1)
-            result *= base;
-        exp >>= 1;
-        base *= base;
-    }
-
-    return result;
-}
-
-int Communication::integerPlaces (int n) 
-{
-    if (n < 0) return 0;
-    if (n < 10) return 1;
-    if (n < 100) return 2;
-    if (n < 1000) return 3;
-    if (n < 10000) return 4;
-    if (n < 100000) return 5;
-    if (n < 1000000) return 6;
-    if (n < 10000000) return 7;
-    if (n < 100000000) return 8;
-    if (n < 1000000000) return 9;
-    return 10;
 }

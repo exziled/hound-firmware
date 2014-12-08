@@ -273,7 +273,7 @@ extern "C" void TIM3_IRQHandler()
                 fixed_t tempCurrent, tempVoltage;
 
                 // Move to next aggregation index depending on time
-                if (newTimestamp - g_sConfig->rmsResults->getAt(1)->timestamp > 60 / (g_sConfig->rmsResults->getSize() +1))
+                if ( (newTimestamp - g_sConfig->rmsResults->getAt(1)->timestamp) > (60 / (g_sConfig->rmsResults->getSize() +1)))
                 {
                     rmsValues = g_sConfig->rmsResults->getBack();
                 }

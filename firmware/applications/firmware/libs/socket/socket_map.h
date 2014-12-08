@@ -53,8 +53,8 @@ typedef struct {
 #else 
 	static volatile socketMap_t socketMap[] = {
 	//	|----Current CS -------|--------|------Voltage CS-------|------Control Pin -----| --- Storage --- |
-		{GPIOA, GPIO_PinSource1, 0x1000, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource0, NULL},
-		{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource1, NULL}
+		{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource0},
+		{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource1}
 	};
 #endif
 

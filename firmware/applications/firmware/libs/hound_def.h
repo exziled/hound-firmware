@@ -2,7 +2,7 @@
 #define __HOUND_DEFS_H
 
 
-#define NEW_SAMPLE_BOARD
+// #define NEW_SAMPLE_BOARD
 
 
 #endif //__HOUND_DEFS_H

@@ -80,6 +80,10 @@ int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strRe
 	int i=0, j=0, replySize = 0;
 	Communication::hRequest_t * request = NULL;
 
+	memset(strResponse, 0, responseBuffSize);
+
+	replySize += Communication::strcat(strResponse+replySize, responseBuffSize - replySize, (char *)"[\0");
+
 	for (int j = 0; j < count; j++)
 	{
 		request = &(arrRequest[j]);
@@ -99,10 +103,10 @@ int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strRe
 		if (dataCount == 1)
 		{
 			// Packet header, begins JSON formatted string and provides node id
-			replySize += snprintf(strResponse, responseBuffSize, "{\"e\":\"ws\",\"core_id\":\"%s\",\"s_id\":\"%d\",", identity->get(), socket);
+			replySize += snprintf(strResponse + replySize, responseBuffSize, "{\"e\":\"ws\",\"core_id\":\"%s\",\"s_id\":\"%d\",", identity->get(), socket);
 		} else 
 		{
-			replySize += snprintf(strResponse, responseBuffSize, "{\"e\":\"samp\",\"core_id\":\"%s\",\"s_id\":\"%d\",", identity->get(), socket);
+			replySize += snprintf(strResponse + replySize, responseBuffSize, "{\"e\":\"samp\",\"core_id\":\"%s\",\"s_id\":\"%d\",", identity->get(), socket);
 		}
 
 		// TIMESTAMP - Required
@@ -171,8 +175,10 @@ int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strRe
 
 
 		// Close JSON array
-		replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "}");
+		replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "},");
 	}
+
+	replySize += Communication::strcat(strResponse+replySize, responseBuffSize - replySize, (char *)"]\0");
 
 	return replySize;
 }

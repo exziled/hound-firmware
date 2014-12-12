@@ -297,11 +297,8 @@ void EXTI0_IRQHandler(void)
 	{
 		/* Clear the EXTI line pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line0);
-
-		if(NULL != Wiring_EXTI_Interrupt_Handler)
-		{
-			Wiring_EXTI_Interrupt_Handler(0);
-		}
+		
+		WLAN_Configure();
 	}
 }
 
@@ -429,8 +426,6 @@ void EXTI9_5_IRQHandler(void)
 	{
 		/* Clear the EXTI line pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line7);
-
-		WLAN_Configure();
 	}
 }
 

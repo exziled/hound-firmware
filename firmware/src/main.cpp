@@ -176,10 +176,6 @@ extern "C" void SparkCoreConfig(void)
 int main(void)
 {
 	int ret = 0;
-	bool g_subscriptionEnabled = false; //@todo write state to eeprom maybe of pins aswell.
-
-	// We have running firmware, otherwise we wouldn't have gotten here
-	uint8_t SPARK_WIRING_APPLICATION = 0;
 
 	/* Main Loop Action Counters */
 	unsigned long g_lastBeat = millis();
@@ -190,7 +186,7 @@ int main(void)
 	unsigned long g_startupMillis = millis();
 
 	/* Variable Definitions */
-
+	bool bBroacast = false;
 	uint8_t reference = 0;
 	uint8_t operation = 0;
 	uint8_t * recvBuff = NULL;
@@ -216,22 +212,22 @@ int main(void)
 	heartbeat_initialize(HEARTBEAT_PORT, HEARTBEAT_PIN);
 
 	// LCD Setup
-	LCDPinConfig_t pinConfig;
-	pinConfig.portRS = GPIOA;
-	pinConfig.pinRS = GPIO_Pin_0;
-	pinConfig.portEnable = GPIOB;
-	pinConfig.pinEnable = GPIO_Pin_5;
-	pinConfig.portRW = GPIOB;
-	pinConfig.pinRW = GPIO_Pin_6;
-	pinConfig.portData0 = GPIOB;
-	pinConfig.pinData0 = GPIO_Pin_4;
-	pinConfig.portData1 = GPIOB;
-	pinConfig.pinData1 = GPIO_Pin_3;
-	pinConfig.portData2 = GPIOA;
-	pinConfig.pinData2 = GPIO_Pin_15;
-	pinConfig.portData3 = GPIOA;
-	pinConfig.pinData3 = GPIO_Pin_14;
-	HD44780 * lcd = HD44780::getInstance(&pinConfig);
+	// LCDPinConfig_t pinConfig;
+	// pinConfig.portRS = GPIOA;
+	// pinConfig.pinRS = GPIO_Pin_0;
+	// pinConfig.portEnable = GPIOB;
+	// pinConfig.pinEnable = GPIO_Pin_5;
+	// pinConfig.portRW = GPIOB;
+	// pinConfig.pinRW = GPIO_Pin_6;
+	// pinConfig.portData0 = GPIOB;
+	// pinConfig.pinData0 = GPIO_Pin_4;
+	// pinConfig.portData1 = GPIOB;
+	// pinConfig.pinData1 = GPIO_Pin_3;
+	// pinConfig.portData2 = GPIOA;
+	// pinConfig.pinData2 = GPIO_Pin_15;
+	// pinConfig.portData3 = GPIOA;
+	// pinConfig.pinData3 = GPIO_Pin_14;
+	// HD44780 * lcd = HD44780::getInstance(&pinConfig);
 
 	// Enable CC3000 SPI Connection
 	uint8_t setup_complete = 0;
@@ -300,160 +296,178 @@ int main(void)
 			
 			setup_complete = 1;
 
-			lcd->clear();
-			lcd->home();
-			lcd->printf("Setup Complete");
+			// lcd->clear();
+			// lcd->home();
+			// lcd->printf("Setup Complete");
 		}
 
 		if(WLAN_GetStatus() && setup_complete)
 		{
-			if(1)
+			// Command Loop
+			if (millis() - g_lastConnectionCheck > CONNECTION_CHECK_MILLIS)
 			{
-				static int count = 0;
-				static bool bBroacast = FALSE;
-				static bool bWatchdog = FALSE;
-				static bool bSampleSocket = FALSE;
 
-				HD44780 * lcd = HD44780::getInstance();
+				// Recieve data from CC3000
+				recieveSize = com_demo->getData(pComBuff, COM_BUFFSIZE, &recvAddress);
 
-				// Command Loop
-				if (millis() - g_lastConnectionCheck > CONNECTION_CHECK_MILLIS)
+				if (recieveSize > 0)
 				{
-					recieveSize = com_demo->getData(pComBuff, COM_BUFFSIZE, &recvAddress);
-
-					// 
-					if (recieveSize > 0)
+					// More than 2 values recieved, we hopefully have a correctly formulated packet
+					if (recieveSize > 2)
 					{
-						// More than 2 values recieved, we hopefully have a correctly formulated packet
-						if (recieveSize > 2)
+						reference = pComBuff[0];
+						operation = pComBuff[1];
+						recvBuff = pComBuff + 2;
+
+						// We only care about parseable data now
+						recieveSize -= 2;
+					} else {
+						continue;
+					}
+
+					// DEMO for now, after we get one ping from the server, a "subscription"
+					// will be made, triggering the core to send updates every 10seconds
+					#ifdef DEBUG_ON
+					HoundDebug::logMessage(pComBuff[1], "Got Data");
+					#endif
+
+					// Socket Data Operation
+					if (operation == 0x00)
+					{
+						// Process Socket Data Operation
+						buffSendSize = Communication::parseRequest((Communication::hRequest_t *)(recvBuff), recieveSize/sizeof(Communication::hRequest_t), (char *)sComBuff, COM_BUFFSIZE, g_Identity);
+						
+						// Server Reply
+						Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
+					} 
+					// Socket Control Operation
+					else if (operation & 0x01)
+					{
+						// Process Socket Operation
+						buffSendSize = Communication::parseCommand((uint8_t *)(recvBuff), recieveSize/sizeof(uint8_t), (char *)sComBuff, COM_BUFFSIZE, reference);
+
+						// Server Reply
+						Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
+					} 
+
+					// Subscription Request
+					// Subscription request should be made in format similar to single data request, indicating
+					// to the core which sockets/which values should be sent back to the server
+					else if (operation & 0x02)
+					{
+						// Create subscription if none exists
+						if (g_Subscription == NULL)
 						{
-							reference = pComBuff[0];
-							operation = pComBuff[1];
-							recvBuff = pComBuff + 2;
-
-							// We only care about parseable data now
-							recieveSize -= 2;
-						} else {
-							continue;
-						}
-
-						// DEMO for now, after we get one ping from the server, a "subscription"
-						// will be made, triggering the core to send updates every 10seconds
-						#ifdef DEBUG_ON
-						HoundDebug::logMessage(pComBuff[1], "Got Data");
-						#endif
-
-						// Socket Data Operation
-						if (operation == 0x00)
-						{
-							// Process Socket Data Operation
-							buffSendSize = Communication::parseRequest((Communication::hRequest_t *)(recvBuff), recieveSize/sizeof(Communication::hRequest_t), (char *)sComBuff, COM_BUFFSIZE, g_Identity);
+							g_Subscription = new Subscription(&recvAddress, sComBuff, COM_BUFFSIZE, g_Identity);
 							
-							// Server Reply
-							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
-						} 
-						// Socket Control Operation
-						else if (operation & 0x01)
-						{
-							// Process Socket Operation
-							buffSendSize = Communication::parseCommand((uint8_t *)(recvBuff), recieveSize/sizeof(uint8_t), (char *)sComBuff, COM_BUFFSIZE, reference);
+							Communication::hRequest_t * subscriptionSockets = (Communication::hRequest_t *)recvBuff;
 
-							// Server Reply
-							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
-						} 
-
-						// Subscription Request
-						// Subscription request should be made in format similar to single data request, indicating
-						// to the core which sockets/which values should be sent back to the server
-						else if (operation & 0x02)
-						{
-							// Create subscription if none exists
-							if (g_Subscription == NULL)
+							for (uint8_t i = 0; i < recieveSize/sizeof(Communication::hRequest_t); i++)
 							{
-								g_Subscription = new Subscription(&recvAddress, sComBuff, COM_BUFFSIZE, g_Identity);
+								g_Subscription->addSocket(subscriptionSockets->rNode, subscriptionSockets->rParam);
 								
-								Communication::hRequest_t * subscriptionSockets = (Communication::hRequest_t *)recvBuff;
-
-								for (uint8_t i = 0; i < recieveSize/sizeof(Communication::hRequest_t); i++)
-								{
-									g_Subscription->addSocket(subscriptionSockets->rNode, subscriptionSockets->rParam);
-								}
+								subscriptionSockets++;
 							}
-
 							// Send back response
 							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"sub\",\"result\":1}", reference);
 							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
+						} else {
+							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"ws\",\"result\":-1,\"msg\":\"Sub Already Mapped\"}", reference);
+							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
+						}
 
-						} 
-						// Websocket Connection Request
+					} 
+					// Websocket Connection Request
 
-						// TODO: Originally, websocket [2] was used to indicate cancelation
-						else if (operation & 0x04)
+					// TODO: Originally, websocket [2] was used to indicate cancelation
+					else if (operation & 0x04)
+					{
+						if (g_FastSubscription == NULL)
 						{
-							if (pComBuff[2] == 1)
+							g_FastSubscription = new Subscription(&recvAddress, sComBuff, COM_BUFFSIZE, g_Identity);
+
+							Communication::hRequest_t * subscriptionSockets = (Communication::hRequest_t *)recvBuff;
+
+							for (uint8_t i = 0; i < recieveSize/sizeof(Communication::hRequest_t); i++)
 							{
-								bSampleSocket = FALSE;
+								g_FastSubscription->addSocket(subscriptionSockets->rNode, subscriptionSockets->rParam);
 
-							} else {
-
-								// g_fastSubAddress.oct[0] = recvAddress.oct[0];
-								// g_fastSubAddress.oct[1] = recvAddress.oct[1];
-								// g_fastSubAddress.oct[2] = recvAddress.oct[2];
-								// g_fastSubAddress.oct[3] = recvAddress.oct[3];
-
-								bSampleSocket = TRUE;
+								subscriptionSockets++;
 							}
 
-							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"ws\",\"result\":%d}", reference, pComBuff[2]);
+							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"ws\",\"result\":1}", reference);
 							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
-
+						} else {
+							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"ws\",\"result\":-1,\"msg\":\"Sub Already Mapped\"}", reference);
+							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
 						}
 					}
 
-					g_lastConnectionCheck = millis();
+					else if (operation & 0x08)
+					{
+						if (recvBuff[0] == 0x2)
+						{
+							if (g_Subscription != NULL)
+							{
+								delete g_Subscription;
+
+								g_Subscription = NULL;
+
+								// Send back response
+								buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"sub\",\"result\":0}", reference);
+								Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
+							}
+
+						} else if (recvBuff[0] == 0x4) {
+							if (g_FastSubscription != NULL)
+							{
+								delete g_FastSubscription;
+
+								g_FastSubscription = NULL;
+
+								buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"ws\",\"result\":0}", reference);
+								Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
+							}
+						}
+					}
 				}
 
-				if (g_Subscription != NULL && millis() - g_lastUpdate > UPDATE_INTERVAL_MILLS) {
+				g_lastConnectionCheck = millis();
+			}
 
-					g_Subscription->sendSubscription();
+			if (g_Subscription != NULL && millis() - g_lastUpdate > UPDATE_INTERVAL_MILLS) {
 
-					g_lastUpdate = millis();
-				}
+				g_Subscription->sendSubscription();
 
-				if ((bSampleSocket) && (millis() - g_lastSocketUpdate) > SOCKET_UPDATE_INTERVAL_MILLS)
-				{
-					// buffSendSize = Communication::parseRequest(&g_fastSubRequest, 1, (char *)sComBuff, COM_BUFFSIZE, g_Identity);
-					// Communication::HoundProto::sendData(sComBuff, buffSendSize, &g_fastSubAddress);
+				g_lastUpdate = millis();
+			}
 
-					// int size = 0, i = 0;;
-					// while (i < BLOCKSIZE && size < COM_BUFFSIZE)
-					// {
-					// 	size += Communication::strcat((char *)sComBuff + size, COM_BUFFSIZE - size, primarySample->voltageBuffer[i++], ',');
-					// }
 
-					// Communication::HoundProto::sendData(sComBuff, size, &g_fastSubAddress);
-					
-					g_lastSocketUpdate = millis();
-				}
+			if ((g_FastSubscription != NULL) && (millis() - g_lastSocketUpdate) > SOCKET_UPDATE_INTERVAL_MILLS)
+			{
 
-				if (!bBroacast && millis() - g_startupMillis > STARTUP_BROADCAST_DELAY)
-				{
+				g_FastSubscription->sendSubscription();
 
-					bBroacast = TRUE;
-					g_broadcastAddress.oct[0] = 224;
-				    g_broadcastAddress.oct[1] = 111;
-					g_broadcastAddress.oct[2] = 112;
-					g_broadcastAddress.oct[3] = 113;
-				    g_Identity->broadcast(&g_broadcastAddress, (char *)sComBuff, COM_BUFFSIZE);
-				
-				    Multicast_Presence_Announcement();
-				}
+				g_lastSocketUpdate = millis();
+			}
 
-				if (millis() - g_lastSync > ONE_DAY_MILLIS) {
-					// Request time synchronization from the Spark Cloud
-					//Spark.syncTime();
-					g_lastSync = millis();
-				}
+			if (!bBroacast && millis() - g_startupMillis > STARTUP_BROADCAST_DELAY)
+			{
+
+				bBroacast = TRUE;
+				g_broadcastAddress.oct[0] = 224;
+			    g_broadcastAddress.oct[1] = 111;
+				g_broadcastAddress.oct[2] = 112;
+				g_broadcastAddress.oct[3] = 113;
+			    g_Identity->broadcast(&g_broadcastAddress, (char *)sComBuff, COM_BUFFSIZE);
+			
+			    Multicast_Presence_Announcement();
+			}
+
+			if (millis() - g_lastSync > ONE_DAY_MILLIS) {
+				// Request time synchronization from the Spark Cloud
+				//Spark.syncTime();
+				g_lastSync = millis();
 			}
 		}
 	}

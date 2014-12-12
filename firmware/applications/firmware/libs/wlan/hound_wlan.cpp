@@ -68,7 +68,7 @@ void WLAN_Initialize(void)
 	CC3000_SPI_DMA_Init();
 
 	// Initilize SmartConfig Interrupt Trigger Pin
-	WLAN_SmartConfigInitializer(SMART_CONFIG_PORT, SMART_CONFIG_PIN, SMART_CONFIG_EXTI, SMART_CONFIG_NVIC);
+	//WLAN_SmartConfigInitializer(SMART_CONFIG_PORT, SMART_CONFIG_PIN, SMART_CONFIG_EXTI, SMART_CONFIG_NVIC);
 
 	// Initilize CC3000 per wireless driver
 	wlan_init(WLAN_Async_Call, WLAN_Firmware_Patch, WLAN_Driver_Patch, WLAN_BootLoader_Patch, CC3000_Read_Interrupt_Pin, CC3000_Interrupt_Enable, CC3000_Interrupt_Disable, CC3000_Write_Enable_Pin);

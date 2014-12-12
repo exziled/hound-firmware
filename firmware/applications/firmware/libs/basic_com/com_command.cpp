@@ -99,10 +99,10 @@ int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strRe
 		if (dataCount == 1)
 		{
 			// Packet header, begins JSON formatted string and provides node id
-			replySize += snprintf(strResponse, responseBuffSize, "{\"e\":\"ws\",\"core_id\":\"%s\",\"s_id\":\"%d\",", identity->get(), (request->rNode & 0xF0) >> 4);
+			replySize += snprintf(strResponse, responseBuffSize, "{\"e\":\"ws\",\"core_id\":\"%s\",\"s_id\":\"%d\",", identity->get(), socket);
 		} else 
 		{
-			replySize += snprintf(strResponse, responseBuffSize, "{\"e\":\"samp\",\"core_id\":\"%s\",\"s_id\":\"%d\",", identity->get(), (request->rNode & 0xF0) >> 4);
+			replySize += snprintf(strResponse, responseBuffSize, "{\"e\":\"samp\",\"core_id\":\"%s\",\"s_id\":\"%d\",", identity->get(), socket);
 		}
 
 		// TIMESTAMP - Required

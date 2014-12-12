@@ -3,8 +3,8 @@
 
 #include "stm32f10x_gpio.h"
 
-#define HEARTBEAT_PIN GPIO_Pin_13
-#define HEARTBEAT_PORT GPIOA
+#define HEARTBEAT_PIN GPIO_Pin_3
+#define HEARTBEAT_PORT GPIOB
 
 void heartbeat_initialize(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 void heartbeat_beat(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);

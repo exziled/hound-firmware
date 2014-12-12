@@ -44,9 +44,9 @@ typedef struct
 
 
 #define SMART_CONFIG_PORT GPIOB
-#define SMART_CONFIG_PIN GPIO_Pin_7
-#define SMART_CONFIG_EXTI EXTI_Line7
-#define SMART_CONFIG_NVIC EXTI9_5_IRQn
+#define SMART_CONFIG_PIN GPIO_Pin_0
+#define SMART_CONFIG_EXTI EXTI_Line0
+#define SMART_CONFIG_NVIC EXTI0_IRQn
 
 // WLAN State Machine variable
 // Volatile due to interrupts

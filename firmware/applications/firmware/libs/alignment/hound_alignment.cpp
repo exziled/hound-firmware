@@ -18,8 +18,8 @@ int16_t alignHOUND_currentReference(uint32_t bits, bool reSample)
 	ADC_InitTypeDef ADC_InitStructure;
 
 	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AIN;
-	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_0 ;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_1 ;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
 
 	// Ensure ADC Clock is Enabled
 	RCC_ADCCLKConfig (RCC_PCLK2_Div6);
@@ -32,7 +32,7 @@ int16_t alignHOUND_currentReference(uint32_t bits, bool reSample)
 	ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
 	ADC_InitStructure.ADC_NbrOfChannel = 1;
 
-	ADC_RegularChannelConfig(ADC2, ADC_Channel_0, 1, ADC_SampleTime_28Cycles5); // define regular conversion config
+	ADC_RegularChannelConfig(ADC2, ADC_Channel_9, 1, ADC_SampleTime_28Cycles5); // define regular conversion config
 	ADC_Init (ADC2, &ADC_InitStructure);   //set config of ADC2
 	
 	ADC_Cmd (ADC2, ENABLE);  //enable ADC2

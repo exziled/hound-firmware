@@ -44,13 +44,16 @@ typedef struct {
 
 
 #ifdef NEW_SAMPLE_BOARD
+	#define SOCKET_COUNT 2
 	// Actual Socket Map.  Can not be const as initilization function sets storage buffer.
 	static volatile socketMap_t socketMap[] = {
 	//	|----Current CS -------|--------|------Voltage CS-------|------Control Pin -----| --- Storage --- |
-		{GPIOA, GPIO_PinSource1, 0x1000, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource0, NULL},
-		{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource1, NULL}
+		{GPIOB, GPIO_PinSource4, 0x1000, GPIOA, GPIO_PinSource3, GPIOA, GPIO_PinSource14, NULL},
+		{GPIOA, GPIO_PinSource4, 0x1000, GPIOA, GPIO_PinSource3, GPIOA, GPIO_PinSource13, NULL}
 	};
 #else 
+	#define SOCKET_COUNT 2
+
 	static volatile socketMap_t socketMap[] = {
 	//	|----Current CS -------|--------|------Voltage CS-------|------Control Pin -----| --- Storage --- |
 		{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource0},

@@ -22,8 +22,25 @@ Subscription::Subscription(Communication::ipAddr_t * requestAddress, uint8_t * c
 	subscription_address.oct[3] = requestAddress->oct[3];
 }
 
+Subscription::~Subscription()
+{
+	free(subscription_map);
+
+	subscription_map = NULL;
+
+	return;
+}
+
 int Subscription::addSocket(uint8_t rNode, uint8_t rParam)
 {
+	for(int i = 0; i < socket_count; i++)
+	{
+		if ((subscription_map[i] >> 12) & 0x0F == (rNode >> 4) & 0x0F)
+		{
+			return -2;
+		}
+	}
+
 	if (socket_count < MAX_SOCKETS);
 	{
 		subscription_map[socket_count++] = ((uint16_t)rNode) << 8 | rParam;

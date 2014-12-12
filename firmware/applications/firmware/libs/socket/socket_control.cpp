@@ -80,5 +80,11 @@ uint8_t socketGetState(uint16_t socket)
 
 volatile socketMap_t * socketGetStruct(uint16_t socket)
 {
-    return &socketMap[socket];
+    if (socket < SOCKET_COUNT)
+    {
+        return &socketMap[socket];
+    } else 
+    {
+        return NULL;
+    }
 }

@@ -225,9 +225,9 @@ extern "C" void TIM3_IRQHandler()
                 current_mul = fixed_mul(current_mul, fixed(11));
                 current_mul = fixed_div(current_mul, fixed(10));
 
-                fixed_t current_offset = fixed(alignHOUND_currentReference(4095) + 190);
-                current_offset = fixed_mul(current_offset, 4);
-                current_offset = fixed_div(current_offset, 10);
+                fixed_t current_offset = fixed(alignHOUND_currentReference(4095) + 25);
+                current_offset = fixed_mul(current_offset, 66);
+                current_offset = fixed_div(current_offset, 100);
 
                 for (int i = 0; i < g_sConfig->bufferSize; i++)
                 {
@@ -240,7 +240,7 @@ extern "C" void TIM3_IRQHandler()
                         // 3.3V Input
                         g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], current_mul);
 
-                        g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], fixed(25));
+                        g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], fixed(15));
 
                         g_sConfig->currentBuffer[i] = fixed_div(g_sConfig->currentBuffer[i], fixed(10));
 
@@ -273,7 +273,7 @@ extern "C" void TIM3_IRQHandler()
                 fixed_t tempCurrent, tempVoltage;
 
                 // Move to next aggregation index depending on time
-                if ( (newTimestamp - g_sConfig->rmsResults->getAt(1)->timestamp) > (60 / (g_sConfig->rmsResults->getSize() +1)))
+                if ( (newTimestamp - g_sConfig->rmsResults->getAt(1)->timestamp) > (60 / (g_sConfig->rmsResults->getSize())))
                 {
                     rmsValues = g_sConfig->rmsResults->getBack();
                 }

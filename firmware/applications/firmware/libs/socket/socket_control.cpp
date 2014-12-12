@@ -68,7 +68,7 @@ void socketToggleState(uint16_t socket)
 
 uint8_t socketGetCount(void)
 {
-    return sizeof(socketMap_t)/sizeof(socketMap);
+    return sizeof(socketMap)/sizeof(socketMap_t);
 }
 
 

@@ -159,7 +159,7 @@ extern "C" void SparkCoreConfig(void)
 #define WATCHDOG_UPDATE_DELAY (1000)
 
 // Sample interval in seconds
-#define SAMPLE_INTERVAL 2
+#define SAMPLE_INTERVAL 1
 
 #define delayms delay
 
@@ -494,20 +494,26 @@ void RTC_IRQHandler(void)
 		{
 			volatile socketMap_t * socketSample = socketGetStruct(socket++);
 
-			primarySample->voltageCSPort = socketSample->voltageCSPort;
-			primarySample->voltageCSPin = socketSample->voltageCSPin;
-			primarySample->currentCSPort = socketSample->currentCSPort;
-			primarySample->currentCSPin = socketSample->currentCSPin;
-			primarySample->currentSPIAlt = socketSample->currentSPIAlt;
-			primarySample->rmsResults = socketSample->rmsResults;
-
-			int ret = getSampleBlock(primarySample);
-			
-			if (ret < 0)
+			if (socketSample != NULL)
 			{
+				primarySample->voltageCSPort = socketSample->voltageCSPort;
+				primarySample->voltageCSPin = socketSample->voltageCSPin;
+				primarySample->currentCSPort = socketSample->currentCSPort;
+				primarySample->currentCSPin = socketSample->currentCSPin;
+				primarySample->currentSPIAlt = socketSample->currentSPIAlt;
+				primarySample->rmsResults = socketSample->rmsResults;
+
+				int ret = getSampleBlock(primarySample);
+
+				if (ret < 0)
+				{
+					LED_SetRGBColor(RGB_COLOR_RED);
+				}
+
+			} else {
 				LED_SetRGBColor(RGB_COLOR_RED);
 			}
-
+			
 			sampleIntervalCount = 0;
 		}
 

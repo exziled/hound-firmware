@@ -82,8 +82,6 @@ int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strRe
 
 	memset(strResponse, 0, responseBuffSize);
 
-	replySize += Communication::strcat(strResponse+replySize, responseBuffSize - replySize, (char *)"[\0");
-
 	for (int j = 0; j < count; j++)
 	{
 		request = &(arrRequest[j]);
@@ -177,8 +175,6 @@ int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strRe
 		// Close JSON array
 		replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "},");
 	}
-
-	replySize += Communication::strcat(strResponse+replySize, responseBuffSize - replySize, (char *)"]\0");
 
 	return replySize;
 }

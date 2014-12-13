@@ -3,6 +3,15 @@
 
 #define LOG_LOCATION_LCD (1 << 0)
 #define LOG_LOCATION_LED (1 << 1)
+#define LOG_LOCATION_NET (1 << 2)
+#define LOG_NET_PORT 8088
+
+#define DEBUG_BUFF_SIZE 32
+
+#define DEFAULT_LOG_LOCATION LOG_LOCATION_NET
+#define DISABLE_LCD_LOG
+// #define DISABLE_LED_LOG
+// #define DISABLE_NET_LOG
 
 class HoundDebug
 {

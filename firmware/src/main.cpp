@@ -299,6 +299,8 @@ int main(void)
 			// lcd->clear();
 			// lcd->home();
 			// lcd->printf("Setup Complete");
+
+			//HoundDebug::logMessage(0, "Setup Complete");
 		}
 
 		if(WLAN_GetStatus() && setup_complete)

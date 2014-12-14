@@ -29,7 +29,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "debug.h"
-#include "spark_utilities.h"
+#include <stdio.h>
 
 #include "hound_wlan.h"
 
@@ -432,8 +432,6 @@ int main(void)
 				g_broadcastAddress.oct[2] = 112;
 				g_broadcastAddress.oct[3] = 113;
 			    g_Identity->broadcast(&g_broadcastAddress, (char *)sComBuff, COM_BUFFSIZE);
-			
-			    Multicast_Presence_Announcement();
 			}
 
 			if (millis() - g_lastSync > ONE_DAY_MILLIS) {
@@ -496,6 +494,11 @@ void RTC_IRQHandler(void)
 }
 
 
+system_tick_t millis(void)
+{
+	return GetSystem1MsTick();
+}
+
 /*******************************************************************************
  * Function Name  : Timing_Decrement
  * Description    : Decrements the various Timing variables related to SysTick.
@@ -511,52 +514,4 @@ void Timing_Decrement(void)
 	}
 
 	updateWatchdog();
-
-#if !defined (RGB_NOTIFICATIONS_ON)	&& defined (RGB_NOTIFICATIONS_OFF)
-	//Just needed in case LED_RGB_OVERRIDE is set to 0 by accident
-	if (LED_RGB_OVERRIDE == 0)
-	{
-		LED_RGB_OVERRIDE = 1;
-		LED_Off(LED_RGB);
-	}
-#endif
-
-	if (LED_RGB_OVERRIDE != 0)
-	{
-		if ((LED_Spark_Signal != 0) && (NULL != LED_Signaling_Override))
-		{
-			LED_Signaling_Override();
-		}
-	}
-	else if (TimingLED != 0x00)
-	{
-		TimingLED--;
-	}
-	else if(WLAN_SMART_CONFIG_START || SPARK_FLASH_UPDATE || Spark_Error_Count)
-	{
-		//Do nothing
-	}
-	else if(SPARK_LED_FADE)
-	{
-		LED_Fade(LED_RGB);
-		TimingLED = 20;//Breathing frequency kept constant
-	}
-	else if(SPARK_WLAN_SETUP && SPARK_CLOUD_CONNECTED)
-	{
-#if defined (RGB_NOTIFICATIONS_CONNECTING_ONLY)
-		LED_Off(LED_RGB);
-#else
-		LED_SetRGBColor(RGB_COLOR_CYAN);
-		LED_On(LED_RGB);
-		SPARK_LED_FADE = 1;
-#endif
-	}
-	else
-	{
-		LED_Toggle(LED_RGB);
-		if(SPARK_CLOUD_SOCKETED)
-			TimingLED = 50;		//50ms
-		else
-			TimingLED = 100;	//100ms
-	}
 }

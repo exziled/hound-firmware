@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "spark_wlan.h"	// Provides malloc for some reason
+#include <cstdlib>
 
 #include "com_command.h"
 

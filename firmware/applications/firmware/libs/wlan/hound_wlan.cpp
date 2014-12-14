@@ -38,7 +38,7 @@ static char aucCC3000_prefix[] = {'T', 'T', 'T'};
 /* AES key "sparkdevices2013" */
 static const unsigned char smartconfigkey[] = "sparkdevices2013";	//16 bytes
 
-extern volatile uint8_t SPARK_LED_FADE;
+// extern volatile uint8_t SPARK_LED_FADE;
 
 uint32_t SPARK_WLAN_SetNetWatchDog(uint32_t timeOutInMS)
 {
@@ -167,7 +167,7 @@ void WLAN_On(void)
 		wlan_start(0);
 		houndWLAN.STARTED = 1;
 
-		SPARK_LED_FADE = 1;
+		// SPARK_LED_FADE = 1;
 		LED_SetRGBColor(RGB_COLOR_BLUE);
     	LED_On(LED_RGB);
 
@@ -181,7 +181,7 @@ void WLAN_Off(void)
 	{
 		wlan_stop();
 
-		SPARK_LED_FADE = 1;
+		// SPARK_LED_FADE = 1;
 	    LED_SetRGBColor(RGB_COLOR_WHITE);
 	    LED_On(LED_RGB);
 	}
@@ -248,7 +248,7 @@ void WLAN_Connect(void)
 
 		wlan_set_event_mask(HCI_EVNT_WLAN_KEEPALIVE | HCI_EVNT_WLAN_UNSOL_INIT);
 
-		SPARK_LED_FADE = 0;
+		// SPARK_LED_FADE = 0;
 		LED_SetRGBColor(RGB_COLOR_GREEN);
 		LED_On(LED_RGB);
 		// User Profile Connection Mode
@@ -290,7 +290,7 @@ void WLAN_Async_Call(long lEventType, char *data, unsigned char length)
 			if (houndWLAN.CONNECTED)
 			{
 
-				SPARK_LED_FADE = 1;
+				// SPARK_LED_FADE = 1;
 				LED_SetRGBColor(RGB_COLOR_BLUE);
 				LED_On(LED_RGB);
 			}
@@ -305,7 +305,7 @@ void WLAN_Async_Call(long lEventType, char *data, unsigned char length)
 			{
 				houndWLAN.DHCP = 1;
 
-				SPARK_LED_FADE = 1;
+				// SPARK_LED_FADE = 1;
 				LED_SetRGBColor(RGB_COLOR_ORANGE);
 				LED_On(LED_RGB);
 			} else {

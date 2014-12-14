@@ -24,10 +24,6 @@
 #include "data_types.h"
 #include "socket.h"
 
- // These Need to be Phased Out
-#include "spark_wlan.h"
-#include "spark_macros.h"
-
 #define NTP_PACKET_SIZE 48
 
 int generateNTPRequest(uint8_t * sendBuffer, int sendBufferSize)

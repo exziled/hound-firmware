@@ -37,7 +37,6 @@ extern "C" {
 extern "C" {
 #endif
 #include "hw_config.h"
-#include "spark_wlan.h"
 #ifdef __cplusplus
 }
 #endif
@@ -95,12 +94,7 @@ extern "C" {
 /* Exported functions ------------------------------------------------------- */
 void Timing_Decrement(void);
 
-void USB_USART_Init(uint32_t baudRate);
-uint8_t USB_USART_Available_Data(void);
-int32_t USB_USART_Receive_Data(void);
-void USB_USART_Send_Data(uint8_t Data);
-void Handle_USBAsynchXfer(void);
-void Get_SerialNum(void);
+system_tick_t millis(void);
 
 }
 

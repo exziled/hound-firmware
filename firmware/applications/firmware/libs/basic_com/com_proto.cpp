@@ -21,9 +21,7 @@
 // HOUND Libraries
 #include "hound_debug.h"
 // ST Libraries
-// TODO: REMOVE
-#include "spark_wlan.h"
-#include "spark_macros.h"
+#include "cc3000_common.h"
 #include "rgbled.h"
 
 
@@ -55,7 +53,7 @@ HoundProto::HoundProto(int listenPort)
     // Need to also destroy object gracefully if we couldn't open the socket
     if (m_sockHandle == -1)
     {
-        LED_SetRGBColor(RGB_COLOR_RED);
+        // LED_SetRGBColor(RGB_COLOR_RED);
         #ifdef DEBUG_ON
     	HoundDebug::logError(LOG_LOCATION_LCD, -1, "Socket Creation");
         #endif
@@ -211,10 +209,10 @@ int HoundProto::sendData(uint8_t * sendBuffer, int bufferSize, ipAddr_t * ipAddr
 
         if (ret <= 0)
         {
-            if (ret == 0)
-                LED_SetRGBColor(RGB_COLOR_WHITE);
-            else 
-                LED_SetRGBColor(RGB_COLOR_RED);
+            //if (ret == 0)
+                // LED_SetRGBColor(RGB_COLOR_WHITE);
+            //else 
+                // LED_SetRGBColor(RGB_COLOR_RED);
             #ifdef DEBUG_ON
             HoundDebug::logError(LOG_LOCATION_LCD, ret, "Send Error");
             #endif

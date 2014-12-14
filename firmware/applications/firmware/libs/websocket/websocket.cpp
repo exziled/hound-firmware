@@ -4,8 +4,7 @@
 #include <string.h>
 
 #include "hound_debug.h"
-#include "spark_wlan.h"
-#include "spark_macros.h"
+#include "cc3000_common.h"
 
 /**
  * Contructor
@@ -56,9 +55,10 @@ WebSocket::WebSocket(char * host, int port)
     connectAddress.sa_data[4] = atoi(oct2);
     connectAddress.sa_data[5] = atoi(oct1);
 
-    uint32_t ot = SPARK_WLAN_SetNetWatchDog(S2M(MAX_SEC_WAIT_CONNECT));
+    // TODO: Look into this
+    // uint32_t ot = SPARK_WLAN_SetNetWatchDog(S2M(MAX_SEC_WAIT_CONNECT));
     ret = connect(m_sockHandle, (sockaddr *)&connectAddress, sizeof(connectAddress));
-    SPARK_WLAN_SetNetWatchDog(ot);
+    // SPARK_WLAN_SetNetWatchDog(ot);
 
     if (ret < 0)
     {
@@ -116,9 +116,9 @@ WebSocket::WebSocket(Communication::ipAddr_t * host, int port)
     connectAddress.sa_data[4] = host->oct[2];
     connectAddress.sa_data[5] = host->oct[3];
 
-    uint32_t ot = SPARK_WLAN_SetNetWatchDog(S2M(MAX_SEC_WAIT_CONNECT));
+    // uint32_t ot = SPARK_WLAN_SetNetWatchDog(S2M(MAX_SEC_WAIT_CONNECT));
     ret = connect(m_sockHandle, (sockaddr *)&connectAddress, sizeof(connectAddress));
-    SPARK_WLAN_SetNetWatchDog(ot);
+    // SPARK_WLAN_SetNetWatchDog(ot);
 
     if (ret < 0)
     {

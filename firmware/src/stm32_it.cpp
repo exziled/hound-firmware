@@ -30,8 +30,6 @@
 #include "debug.h"
 #include "stm32_it.h"
 #include "main.h"
-#include "usb_lib.h"
-#include "usb_istr.h"
 
 #include "hound_wlan.h"
 
@@ -636,7 +634,7 @@ void DMA1_Channel5_IRQHandler(void)
 *******************************************************************************/
 void USB_LP_CAN1_RX0_IRQHandler(void)
 {
-	USB_Istr();
+	//USB_Istr();
 }
 
 

@@ -23,6 +23,7 @@
 #include "hound_adc.h"
 #include "hound_rms_fixed.h"
 #include "hound_alignment.h"
+#include "hound_debug.h"
 
 // ST Libraries
 #include "misc.h"
@@ -225,9 +226,13 @@ extern "C" void TIM3_IRQHandler()
                 current_mul = fixed_mul(current_mul, fixed(11));
                 current_mul = fixed_div(current_mul, fixed(10));
 
-                fixed_t current_offset = fixed(alignHOUND_currentReference(4095) + 25);
+                fixed_t current_offset = fixed(alignHOUND_currentReference(4095) + 35);
                 current_offset = fixed_mul(current_offset, 66);
                 current_offset = fixed_div(current_offset, 100);
+
+                //fixed_t current_offset = alignHOUND_HallEffectSetOffset(g_sConfig->socket_id, g_sConfig->currentBuffer, g_sConfig->bufferSize);
+
+                //HoundDebug::logError(current_offset >> 16, "Current Offset");
 
                 for (int i = 0; i < g_sConfig->bufferSize; i++)
                 {

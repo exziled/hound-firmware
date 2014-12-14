@@ -32,6 +32,7 @@
  * buffer where collected samples should be stored.
  */
 typedef struct {
+	uint8_t socket_id;
 	GPIO_TypeDef * currentCSPort;
 	uint8_t currentCSPin;			// PinSource, not Pin BitMask (i.e Pin 2 = 0x02 not 1 << 0x02)
 	uint16_t currentSPIAlt;
@@ -48,16 +49,16 @@ typedef struct {
 	// Actual Socket Map.  Can not be const as initilization function sets storage buffer.
 	static volatile socketMap_t socketMap[] = {
 	//	|----Current CS -------|--------|------Voltage CS-------|------Control Pin -----| --- Storage --- |
-		{GPIOB, GPIO_PinSource4, 0x1000, GPIOA, GPIO_PinSource3, GPIOA, GPIO_PinSource14, NULL},
-		{GPIOB, GPIO_PinSource4, 0x1800, GPIOA, GPIO_PinSource3, GPIOA, GPIO_PinSource13, NULL}
+		{0, GPIOB, GPIO_PinSource4, 0x1000, GPIOA, GPIO_PinSource3, GPIOA, GPIO_PinSource14, NULL},
+		{1, GPIOB, GPIO_PinSource4, 0x1800, GPIOA, GPIO_PinSource3, GPIOA, GPIO_PinSource13, NULL}
 	};
 #else 
 	#define SOCKET_COUNT 2
 
 	static volatile socketMap_t socketMap[] = {
 	//	|----Current CS -------|--------|------Voltage CS-------|------Control Pin -----| --- Storage --- |
-		{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource0},
-		{GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource1}
+		{0, GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource0},
+		{1, GPIOA, GPIO_PinSource4, 0, GPIOA, GPIO_PinSource4, GPIOB, GPIO_PinSource1}
 	};
 #endif
 

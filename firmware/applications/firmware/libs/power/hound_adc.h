@@ -47,6 +47,7 @@ typedef struct
 	AggregatedRMS * rmsResults;
 	uint16_t bufferSize;
 	uint16_t sampleCount;
+	uint8_t socket_id;
 	// Voltage Selection Details
 	GPIO_TypeDef* voltageCSPort;
 	uint8_t voltageCSPin;			// PinSource, not Pin BitMask (i.e Pin 2 = 0x02 not 1 << 0x02)

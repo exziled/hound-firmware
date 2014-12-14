@@ -300,7 +300,7 @@ int main(void)
 			// lcd->home();
 			// lcd->printf("Setup Complete");
 
-			//HoundDebug::logMessage(0, "Setup Complete");
+			HoundDebug::logMessage(0, "Setup Complete");
 		}
 
 		if(WLAN_GetStatus() && setup_complete)
@@ -503,6 +503,7 @@ void RTC_IRQHandler(void)
 				primarySample->currentCSPort = socketSample->currentCSPort;
 				primarySample->currentCSPin = socketSample->currentCSPin;
 				primarySample->currentSPIAlt = socketSample->currentSPIAlt;
+				primarySample->socket_id = socketSample->socket_id;
 				primarySample->rmsResults = socketSample->rmsResults;
 
 				int ret = getSampleBlock(primarySample);

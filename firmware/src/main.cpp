@@ -53,23 +53,9 @@
 
 #include "stm32f10x_gpio.h"
 
-extern "C" {
-#include "usb_conf.h"
-#include "usb_lib.h"
-#include "usb_desc.h"
-#include "usb_pwr.h"
-#include "usb_prop.h"
-#include "sst25vf_spi.h"
-}
-
 
 static volatile sampleSetup_t * primarySample = NULL;
 
-/* Private typedef -----------------------------------------------------------*/
-
-/* Private define ------------------------------------------------------------*/
-
-/* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
 volatile uint32_t TimingFlashUpdateTimeout;
@@ -79,23 +65,7 @@ uint32_t USART_Rx_ptr_in = 0;
 uint32_t USART_Rx_ptr_out = 0;
 uint32_t USART_Rx_length  = 0;
 
-uint8_t USB_Rx_Buffer[VIRTUAL_COM_PORT_DATA_SIZE];
-uint16_t USB_Rx_length = 0;
-uint16_t USB_Rx_ptr = 0;
 
-uint8_t  USB_Tx_State = 0;
-uint8_t  USB_Rx_State = 0;
-
-uint32_t USB_USART_BaudRate = 9600;
-
-static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len);
-
-/* Extern variables ----------------------------------------------------------*/
-extern LINE_CODING linecoding;
-
-/* Private function prototypes -----------------------------------------------*/
-
-/* Private functions ---------------------------------------------------------*/
 
 /*******************************************************************************
  * Function Name  : SparkCoreConfig.
@@ -590,56 +560,3 @@ void Timing_Decrement(void)
 			TimingLED = 100;	//100ms
 	}
 }
-
-/*******************************************************************************
- * Function Name  : Get_SerialNum.
- * Description    : Create the serial number string descriptor.
- * Input          : None.
- * Output         : None.
- * Return         : None.
- *******************************************************************************/
-void Get_SerialNum(void)
-{
-	uint32_t Device_Serial0, Device_Serial1, Device_Serial2;
-
-	Device_Serial0 = *(uint32_t*)ID1;
-	Device_Serial1 = *(uint32_t*)ID2;
-	Device_Serial2 = *(uint32_t*)ID3;
-
-	Device_Serial0 += Device_Serial2;
-
-	if (Device_Serial0 != 0)
-	{
-		IntToUnicode (Device_Serial0, &Virtual_Com_Port_StringSerial[2] , 8);
-		IntToUnicode (Device_Serial1, &Virtual_Com_Port_StringSerial[18], 4);
-	}
-}
-
-/*******************************************************************************
- * Function Name  : HexToChar.
- * Description    : Convert Hex 32Bits value into char.
- * Input          : None.
- * Output         : None.
- * Return         : None.
- *******************************************************************************/
-static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len)
-{
-	uint8_t idx = 0;
-
-	for( idx = 0 ; idx < len ; idx ++)
-	{
-		if( ((value >> 28)) < 0xA )
-		{
-			pbuf[ 2* idx] = (value >> 28) + '0';
-		}
-		else
-		{
-			pbuf[2* idx] = (value >> 28) + 'A' - 10;
-		}
-
-		value = value << 4;
-
-		pbuf[ 2* idx + 1] = 0;
-	}
-}
-

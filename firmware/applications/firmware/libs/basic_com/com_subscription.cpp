@@ -31,6 +31,16 @@ Subscription::~Subscription()
 	return;
 }
 
+bool Subscription::isValid(void)
+{
+	if (subscription_map == NULL)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 int Subscription::addSocket(uint8_t rNode, uint8_t rParam)
 {
 	for(int i = 0; i < socket_count; i++)

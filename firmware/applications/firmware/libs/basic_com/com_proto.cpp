@@ -89,21 +89,21 @@ HoundProto::HoundProto(int listenPort)
     }
 
     // Enable listening on specified port with 1 connection buffer;
-    ret = listen(m_sockHandle, 1);
+    // ret = listen(m_sockHandle, 1);
 
-    if (ret < 0)
-    {
-        #ifdef DEBUG_ON
-    	HoundDebug::logError(LOG_LOCATION_LCD, ret, "Listen failed");
-        #endif
+    // if (ret < 0)
+    // {
+    //     #ifdef DEBUG_ON
+    // 	HoundDebug::logError(LOG_LOCATION_LCD, ret, "Listen failed");
+    //     #endif
 
-    	closesocket(m_sockHandle);
-    	m_sockHandle = -1;
-    	return;
-    }
+    // 	closesocket(m_sockHandle);
+    // 	m_sockHandle = -1;
+    // 	return;
+    // }
 
    	// Reset socket address struct
-	memset(m_sockAddress, 0, m_sockAddressSize);
+	//memset(m_sockAddress, 0, m_sockAddressSize);
 }
 
 // Dtor
@@ -159,7 +159,7 @@ int HoundProto::getData(uint8_t * recvBuffer, int buffSize, ipAddr_t * ipAddr)
             #endif
 	    }
 
-	    memset(m_sockAddress, 0, m_sockAddressSize);
+	    //memset(m_sockAddress, 0, m_sockAddressSize);
 
 	} else {
 		#ifdef DEBUG_ON
@@ -184,7 +184,7 @@ int HoundProto::sendData(uint8_t * sendBuffer, int bufferSize, ipAddr_t * ipAddr
     {
 
         #ifdef DEBUG_ON
-        HoundDebug::logError(LOG_LOCATION_LCD, -1, "Socket Creation");
+        HoundDebug::logError(-1, "Socket Creation");
         #endif
 
         return -1;
@@ -203,18 +203,22 @@ int HoundProto::sendData(uint8_t * sendBuffer, int bufferSize, ipAddr_t * ipAddr
     connectAddress.sa_data[4] = ipAddr->oct[2];
     connectAddress.sa_data[5] = ipAddr->oct[3];
 
+    #ifdef DEBUG_ON
+    HoundDebug::logMessage(ipAddr->oct[3], "Sending To");
+    #endif 
+
     while (sent < bufferSize)
     {
+        #ifdef DEBUG_ON
+        HoundDebug::logMessage(bufferSize, "Buffer Size");
+        #endif
+
         ret = ::sendto(sendSocket, sendBuffer + sent, bufferSize - sent, 0, &connectAddress, sizeof(sockaddr));
 
         if (ret <= 0)
         {
-            //if (ret == 0)
-                // LED_SetRGBColor(RGB_COLOR_WHITE);
-            //else 
-                // LED_SetRGBColor(RGB_COLOR_RED);
             #ifdef DEBUG_ON
-            HoundDebug::logError(LOG_LOCATION_LCD, ret, "Send Error");
+            HoundDebug::logError(ret, "Send Error");
             #endif
             closesocket(sendSocket);
             return ret;

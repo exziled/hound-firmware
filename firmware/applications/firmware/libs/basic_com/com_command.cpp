@@ -173,7 +173,7 @@ int Communication::parseRequest(hRequest_t * arrRequest, int count, char * strRe
 
 
 		// Close JSON array
-		replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "},");
+		replySize += snprintf(strResponse + replySize, responseBuffSize - replySize, "}");
 	}
 
 	return replySize;

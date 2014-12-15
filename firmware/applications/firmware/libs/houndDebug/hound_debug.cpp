@@ -42,7 +42,7 @@ void HoundDebug::log(int location, int error_number, char * log_message)
 	#ifndef DISABLE_NET_LOG
 		if (location & LOG_LOCATION_NET)
 		{
-			static char debugMessage[DEBUG_BUFF_SIZE];
+			char debugMessage[DEBUG_BUFF_SIZE] = {0};
 			int sendSocket, ret;
 		    unsigned int sent = 0;
 		    sockaddr connectAddress;

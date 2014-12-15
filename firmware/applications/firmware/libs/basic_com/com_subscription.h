@@ -12,6 +12,8 @@ public:
 	Subscription(Communication::ipAddr_t * requestAddress, uint8_t * comBuff, uint16_t bufferSize, HoundIdentity * identity);
 	~Subscription();
 
+	bool isValid(void);
+
 	// 0, added sucessfully
 	// -1, no more room
 	int addSocket(uint8_t rNode, uint8_t rParam);

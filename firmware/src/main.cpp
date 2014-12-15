@@ -270,6 +270,7 @@ int main(void)
 			// lcd->home();
 			// lcd->printf("Setup Complete");
 
+
 			HoundDebug::logMessage(0, "Setup Complete");
 		}
 
@@ -328,6 +329,12 @@ int main(void)
 					else if (operation & 0x02)
 					{
 						// Create subscription if none exists
+						if (g_Subscription != NULL)
+						{
+							delete g_Subscription;
+							g_Subscription = NULL;
+						}
+
 						if (g_Subscription == NULL)
 						{
 							g_Subscription = new Subscription(&recvAddress, sComBuff, COM_BUFFSIZE, g_Identity);
@@ -341,10 +348,10 @@ int main(void)
 								subscriptionSockets++;
 							}
 							// Send back response
-							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"sub\",\"result\":1}", reference);
+							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"core_id\":\"%s\",\"op\":\"sub\",\"result\":1}", reference, g_Identity->get());
 							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
 						} else {
-							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"ws\",\"result\":-1,\"msg\":\"Sub Already Mapped\"}", reference);
+							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"sub\",\"result\":-1,\"msg\":\"Sub Already Mapped\"}", reference);
 							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
 						}
 
@@ -354,9 +361,26 @@ int main(void)
 					// TODO: Originally, websocket [2] was used to indicate cancelation
 					else if (operation & 0x04)
 					{
+						if (g_FastSubscription != NULL)
+						{
+							delete g_FastSubscription;
+							g_FastSubscription = NULL;
+						}
+
 						if (g_FastSubscription == NULL)
 						{
 							g_FastSubscription = new Subscription(&recvAddress, sComBuff, COM_BUFFSIZE, g_Identity);
+
+							if (!g_FastSubscription->isValid())
+							{
+								delete g_FastSubscription;
+								g_FastSubscription = NULL;
+
+								buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"core_id\":\"%s\",\"op\":\"ws\",\"result\":-2,\"msg\":\"Sub Failed\"}", reference, g_Identity->get());
+								Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
+
+								break;
+							}
 
 							Communication::hRequest_t * subscriptionSockets = (Communication::hRequest_t *)recvBuff;
 
@@ -370,7 +394,7 @@ int main(void)
 							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"ws\",\"result\":1}", reference);
 							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
 						} else {
-							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"ws\",\"result\":-1,\"msg\":\"Sub Already Mapped\"}", reference);
+							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"core_id\":\"%s\",\"op\":\"ws\",\"result\":-1,\"msg\":\"Sub Already Mapped\"}", reference, g_Identity->get());
 							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
 						}
 					}

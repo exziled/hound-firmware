@@ -152,8 +152,26 @@ extern "C" void TIM3_IRQHandler()
         // While there's still data to process
         if (g_sConfig->sampleCount < g_sConfig->bufferSize)
         {
-
             #ifdef NEW_SAMPLE_BOARD
+                if (g_sConfig->sampleCount == 0)
+                {
+                    // Sample Current
+                    GPIO_ResetBits(g_sConfig->currentCSPort, 1 << g_sConfig->currentCSPin);
+
+                    while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
+                    SPI_I2S_SendData(SPI1, g_sConfig->currentSPIAlt);   // Channel of next current sample
+                    while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
+                    temp = SPI_I2S_ReceiveData(SPI1);
+                    GPIO_SetBits(g_sConfig->currentCSPort, 1 << g_sConfig->currentCSPin);
+                    // Sample Voltage
+                    GPIO_ResetBits(g_sConfig->voltageCSPort, 1 << g_sConfig->voltageCSPin);
+                    while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
+                    SPI_I2S_SendData(SPI1, 0);   // No channels for voltage
+                    while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
+                    temp = SPI_I2S_ReceiveData(SPI1);
+                    GPIO_SetBits(g_sConfig->voltageCSPort, 1 << g_sConfig->voltageCSPin);
+                }
+
                 // Sample Current
                 GPIO_ResetBits(g_sConfig->currentCSPort, 1 << g_sConfig->currentCSPin);
 
@@ -245,17 +263,17 @@ extern "C" void TIM3_IRQHandler()
                         // 3.3V Input
                         g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], current_mul);
 
-                        g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], fixed(15));
+                        g_sConfig->currentBuffer[i] = fixed_mul(g_sConfig->currentBuffer[i], fixed(16));
 
                         g_sConfig->currentBuffer[i] = fixed_div(g_sConfig->currentBuffer[i], fixed(10));
 
                         // Voltage
-                        // "0" Offset is 2.5V
+                        // "0" Offset is 2.5V //512
                         g_sConfig->voltageBuffer[i] = fixed_sub(g_sConfig->voltageBuffer[i], fixed(512));
                         // 10 Bit ADC
                         g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(1024));                    
                         // Scaling and voltage refernce
-                        g_sConfig->voltageBuffer[i] = fixed_mul(g_sConfig->voltageBuffer[i], fixed(72 * 5));
+                        g_sConfig->voltageBuffer[i] = fixed_mul(g_sConfig->voltageBuffer[i], fixed(71 * 5));
                         // DSP Scaling
                         g_sConfig->voltageBuffer[i] = fixed_div(g_sConfig->voltageBuffer[i], fixed(100));
 
@@ -278,7 +296,7 @@ extern "C" void TIM3_IRQHandler()
                 fixed_t tempCurrent, tempVoltage;
 
                 // Move to next aggregation index depending on time
-                if ( (newTimestamp - g_sConfig->rmsResults->getAt(1)->timestamp) > (60 / (g_sConfig->rmsResults->getSize())))
+                if ( (newTimestamp - g_sConfig->rmsResults->getAt(1)->timestamp) > (60 / (g_sConfig->rmsResults->getSize() - 1)))
                 {
                     rmsValues = g_sConfig->rmsResults->getBack();
                 }

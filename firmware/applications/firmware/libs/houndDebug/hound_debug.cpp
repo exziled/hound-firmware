@@ -1,11 +1,26 @@
-#include "hound_debug.h"
-#include "hd44780.h"
-	// type defines for socket.h/c
-    #include "data_types.h"
-    // CC3000 std driver library
-    #include "socket.h"
+/*!
+ * @file hound_debug.cpp
+ * 
+ * @brief HOUND Debug Library
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date November 20, 2014
+ * 
+ * Functional implementation for HOUND Debug class.  Allows for remote and local debugging
+ * using HD44780 library, remote socket library, and LED.
+ */
 
+// Standard Libraries
 #include <stdio.h>
+// HOUND Libraries
+#include "hd44780.h"
+#include "hound_debug.h"
+// ST Libraries
+// TI Libraries
+#include "data_types.h"	// type defines for socket.h/c
+#include "socket.h"	// CC3000 std driver library
 #include "rgbled.h"
 
 // G++ doesn't like constant strings

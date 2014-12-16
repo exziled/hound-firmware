@@ -1,3 +1,17 @@
+/*!
+ * @file hound_identity.h
+ * 
+ * @brief HOUND Identification Library
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date November 20, 2014
+ * 
+ * Functional defines for HOUND Identity class, allowing for identification between
+ * HOUND Node devices.
+ */
+
 #ifndef __HOUND_IDENTITY_H
 #define __HOUND_IDENTITY_H
 

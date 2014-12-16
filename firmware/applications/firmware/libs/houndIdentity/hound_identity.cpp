@@ -1,3 +1,17 @@
+/*!
+ * @file hound_identity.cpp
+ * 
+ * @brief HOUND Identification Library
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date November 20, 2014
+ * 
+ * Functional implementation for HOUND Identity class, allowing for identification between
+ * HOUND Node devices.
+ */
+
 #include "hound_identity.h"
 #include <string.h>
 #include <stdio.h>

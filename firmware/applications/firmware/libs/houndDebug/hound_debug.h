@@ -1,3 +1,17 @@
+/*!
+ * @file hound_debug.h
+ * 
+ * @brief HOUND Debug Library
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date November 20, 2014
+ * 
+ * Functional defines for HOUND Debug class.  Allows for remote and local debugging
+ * using HD44780 library, remote socket library, and LED.
+ */
+
 #ifndef __HOUND_DEBUG_H
 #define __HOUND_DEBUG_H
 

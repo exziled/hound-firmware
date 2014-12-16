@@ -75,7 +75,7 @@ uint8_t socketGetCount(void)
 uint8_t socketGetState(uint16_t socket)
 {
 	// TODO: If the port is forced off due to overtemperature condition, that goes here
-	return GPIO_ReadInputDataBit(socketMap[socket].controlPort, 1 << socketMap[socket].controlPin);
+	return GPIO_ReadOutputDataBit(socketMap[socket].controlPort, 1 << socketMap[socket].controlPin);
 }
 
 volatile socketMap_t * socketGetStruct(uint16_t socket)

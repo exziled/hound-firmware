@@ -239,14 +239,16 @@ extern "C" void TIM3_IRQHandler()
             {
                 rmsValues_t * rmsValues;
 
-                // Make "3.3V"
-                fixed_t current_mul = fixed(3);
-                current_mul = fixed_mul(current_mul, fixed(11));
-                current_mul = fixed_div(current_mul, fixed(10));
+                #ifdef NEW_SAMPLE_BOARD
+                    // Make "3.3V"
+                    fixed_t current_mul = fixed(3);
+                    current_mul = fixed_mul(current_mul, fixed(11));
+                    current_mul = fixed_div(current_mul, fixed(10));
 
-                fixed_t current_offset = fixed(alignHOUND_currentReference(4095) + 35);
-                current_offset = fixed_mul(current_offset, 66);
-                current_offset = fixed_div(current_offset, 100);
+                    fixed_t current_offset = fixed(alignHOUND_currentReference(4095) + 35);
+                    current_offset = fixed_mul(current_offset, 66);
+                    current_offset = fixed_div(current_offset, 100);
+                #endif
 
                 //fixed_t current_offset = alignHOUND_HallEffectSetOffset(g_sConfig->socket_id, g_sConfig->currentBuffer, g_sConfig->bufferSize);
 

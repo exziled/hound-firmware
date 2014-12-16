@@ -40,25 +40,6 @@ static const unsigned char smartconfigkey[] = "sparkdevices2013";	//16 bytes
 
 // extern volatile uint8_t SPARK_LED_FADE;
 
-uint32_t SPARK_WLAN_SetNetWatchDog(uint32_t timeOutInMS)
-{
-  uint32_t rv = cc3000__event_timeout_ms;
-  cc3000__event_timeout_ms = timeOutInMS;
-  return rv;
-}
-
-void Clear_NetApp_Dhcp(void)
-{
-	// Clear out the DHCP settings
-	unsigned long pucSubnetMask = 0;
-	unsigned long pucIP_Addr = 0;
-	unsigned long pucIP_DefaultGWAddr = 0;
-	unsigned long pucDNS = 0;
-
-	netapp_dhcp(&pucIP_Addr, &pucSubnetMask, &pucIP_DefaultGWAddr, &pucDNS);
-}
-
-
 
 void WLAN_Initialize(void)
 {
@@ -435,3 +416,23 @@ void Set_NetApp_Timeout(void)
 	SPARK_WLAN_SetNetWatchDog(S2M(DEFAULT_SEC_NETOPS)+ (DEFAULT_SEC_INACTIVITY ? 250 : 0) );
 	netapp_timeout_values(&aucDHCP, &aucARP, &aucKeepalive, &aucInactivity);
 }
+
+uint32_t SPARK_WLAN_SetNetWatchDog(uint32_t timeOutInMS)
+{
+  uint32_t rv = cc3000__event_timeout_ms;
+  cc3000__event_timeout_ms = timeOutInMS;
+  return rv;
+}
+
+void Clear_NetApp_Dhcp(void)
+{
+	// Clear out the DHCP settings
+	unsigned long pucSubnetMask = 0;
+	unsigned long pucIP_Addr = 0;
+	unsigned long pucIP_DefaultGWAddr = 0;
+	unsigned long pucDNS = 0;
+
+	netapp_dhcp(&pucIP_Addr, &pucSubnetMask, &pucIP_DefaultGWAddr, &pucDNS);
+}
+
+

@@ -1,4 +1,5 @@
 #include "com_subscription.h"
+#include "hound_debug.h"
 
 #include <stdint.h>
 
@@ -45,7 +46,7 @@ int Subscription::addSocket(uint8_t rNode, uint8_t rParam)
 {
 	for(int i = 0; i < socket_count; i++)
 	{
-		if ((subscription_map[i] >> 12) & 0x0F == (rNode >> 4) & 0x0F)
+		if (((subscription_map[i] >> 12) & 0x0F) == ((rNode >> 4) & 0x0F))
 		{
 			return -2;
 		}
@@ -88,6 +89,8 @@ void Subscription::sendSubscription(void)
 {
 	int buffSendSize = 0;
 	Communication::hRequest_t subscriptionRequest;
+
+	HoundDebug::logMessage(0, "Sending Sub");
 
 	for (int i = 0; i < socket_count; i++)
 	{	

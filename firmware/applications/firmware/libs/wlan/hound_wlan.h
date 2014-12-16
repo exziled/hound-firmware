@@ -86,6 +86,7 @@ char *WLAN_Firmware_Patch(unsigned long *length);
 char *WLAN_Driver_Patch(unsigned long *length);
 char *WLAN_BootLoader_Patch(unsigned long *length);
 void Set_NetApp_Timeout(void);
+void Clear_NetApp_Dhcp(void);
 uint32_t SPARK_WLAN_SetNetWatchDog(uint32_t timeOutInuS);
 
 // Get SSID

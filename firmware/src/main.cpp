@@ -328,6 +328,8 @@ int main(void)
 					// to the core which sockets/which values should be sent back to the server
 					else if (operation & 0x02)
 					{
+						HoundDebug::logMessage(0, "Create Slow Sub");
+
 						// Create subscription if none exists
 						if (g_Subscription != NULL)
 						{
@@ -361,6 +363,9 @@ int main(void)
 					// TODO: Originally, websocket [2] was used to indicate cancelation
 					else if (operation & 0x04)
 					{
+
+						HoundDebug::logMessage(0, "Create Fast Sub");
+
 						if (g_FastSubscription != NULL)
 						{
 							delete g_FastSubscription;
@@ -369,9 +374,10 @@ int main(void)
 
 						if (g_FastSubscription == NULL)
 						{
+
 							g_FastSubscription = new Subscription(&recvAddress, sComBuff, COM_BUFFSIZE, g_Identity);
 
-							if (!g_FastSubscription->isValid())
+							if (g_FastSubscription == NULL || !g_FastSubscription->isValid())
 							{
 								delete g_FastSubscription;
 								g_FastSubscription = NULL;
@@ -379,7 +385,7 @@ int main(void)
 								buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"core_id\":\"%s\",\"op\":\"ws\",\"result\":-2,\"msg\":\"Sub Failed\"}", reference, g_Identity->get());
 								Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
 
-								break;
+								continue;
 							}
 
 							Communication::hRequest_t * subscriptionSockets = (Communication::hRequest_t *)recvBuff;
@@ -397,6 +403,8 @@ int main(void)
 							buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"core_id\":\"%s\",\"op\":\"ws\",\"result\":-1,\"msg\":\"Sub Already Mapped\"}", reference, g_Identity->get());
 							Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
 						}
+
+						continue;
 					}
 
 					else if (operation & 0x08)
@@ -433,6 +441,8 @@ int main(void)
 
 			if (g_Subscription != NULL && millis() - g_lastUpdate > UPDATE_INTERVAL_MILLS) {
 
+				HoundDebug::logMessage(0, "Fire Slow Sub");
+
 				g_Subscription->sendSubscription();
 
 				g_lastUpdate = millis();
@@ -441,6 +451,8 @@ int main(void)
 
 			if ((g_FastSubscription != NULL) && (millis() - g_lastSocketUpdate) > SOCKET_UPDATE_INTERVAL_MILLS)
 			{
+
+				HoundDebug::logMessage(0, "Fire Fast Sub");
 
 				g_FastSubscription->sendSubscription();
 
@@ -465,7 +477,17 @@ int main(void)
 			}
 		}
 	}
+	while(1)
+	{
+		if (millis() - g_lastBeat > HEARTBEAT_MILLS)
+		{
+			heartbeat_beat(HEARTBEAT_PORT, HEARTBEAT_PIN);
+			g_lastBeat = millis();
+		}
+	}
+
 }
+
 
 void RTC_IRQHandler(void)
 {

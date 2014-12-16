@@ -31,6 +31,7 @@ extern "C" {
 #include "spark_macros.h"
 #include "heartbeat.h"
 
+// Smart config defines, consistent with spark core for app compatibility
 static char device[] = "CC3000";
 static tNetappIpconfigRetArgs hound_ip_config;
 /* Smart Config Prefix */
@@ -38,14 +39,12 @@ static char aucCC3000_prefix[] = {'T', 'T', 'T'};
 /* AES key "sparkdevices2013" */
 static const unsigned char smartconfigkey[] = "sparkdevices2013";	//16 bytes
 
-// extern volatile uint8_t SPARK_LED_FADE;
-
 
 void WLAN_Initialize(void)
 {
 	CC3000_WIFI_Init();
 
-	// Initialize SPI/DMA interface
+	// Initialize SPI/DMA interface (From SPARK)
 	CC3000_SPI_DMA_Init();
 
 	// Initilize SmartConfig Interrupt Trigger Pin
@@ -325,30 +324,6 @@ void WLAN_SmartConfigHandler(void)
 
 	/* Start the SmartConfig start process */
 	wlan_smart_config_start(1);
-
-	// 	//WiFiCredentialsReader wifi_creds_reader(wifi_add_profile_callback);
-
-	// /* Wait for SmartConfig/SerialConfig to finish */
-	// while (WiFi.listening())
-	// {
-	// 	if(WLAN_DELETE_PROFILES)
-	// 	{
-	// 		int toggle = 25;
-	// 		while(toggle--)
-	// 		{
-	// 			LED_Toggle(LED_RGB);
-	// 			Delay(50);
-	// 		}
-	// 		WiFi.clearCredentials();
-	// 		WLAN_DELETE_PROFILES = 0;
-	// 	}
-	// 	else
-	// 	{
-	// 		LED_Toggle(LED_RGB);
-	// 		Delay(250);
-	// 		//wifi_creds_reader.read();
-	// 	}
-	// }
 
 	LED_SetRGBColor(RGB_COLOR_BLUE);
 	LED_On(LED_RGB);

@@ -16,15 +16,11 @@
 #ifndef __HOUND_COM_H
 #define __HOUND_COM_H
 
+// Standard Libraries
 #include <stdint.h>
-
-extern "C"
-{
-	// type defines for socket.h/c
-    #include "data_types.h"
-    // CC3000 std driver library
-    #include "socket.h"
-}
+// TI Libraries
+#include "data_types.h"	// type defines for socket.h/c
+#include "socket.h"		// CC3000 std driver library
 
 namespace Communication
 {
@@ -35,7 +31,6 @@ namespace Communication
 	} ipAddr_t;
 
 
-	
 	class HoundProto
 	{
 	public:

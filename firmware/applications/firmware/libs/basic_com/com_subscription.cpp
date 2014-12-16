@@ -1,10 +1,24 @@
+/*!
+ * @file com_subscription.cpp
+ * 
+ * @brief HOUND Communication Subscription Functions
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date December 5, 2014
+ * 
+ * Functional implementation of subscription class managing subscribed clients and
+ * requested data sources.
+ * 
+ */
 #include "com_subscription.h"
-#include "hound_debug.h"
 
-#include <stdint.h>
-
+// Standard Libraries
 #include <cstdlib>
-
+#include <stdint.h>
+// HOUND Libraries
+#include "hound_debug.h"
 #include "com_command.h"
 
 

@@ -1,93 +1,66 @@
-/**
- ******************************************************************************
- * @file    main.cpp
- * @author  Satish Nair, Zachary Crockett, Zach Supalla and Mohit Bhoite
- * @version V1.0.0
- * @date    13-March-2013
+/*!
+ * @file main.cpp
  * 
- * Updated: 14-Feb-2014 David Sidrane <david_s5@usa.net>
+ * @brief HOUND Node Main
  * 
- * @brief   Main program body.
- ******************************************************************************
-  Copyright (c) 2013 Spark Labs, Inc.  All rights reserved.
-
-  This program is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation, either
-  version 3 of the License, or (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this program; if not, see <http://www.gnu.org/licenses/>.
-  ******************************************************************************
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date November 20, 2014
+ * 
+ * Main code necessary for HOUND Node:
+ * - Unified MKII
+ * - Wood Board
+ * 
  */
 
-/* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "debug.h"
+
+// Standard Libraries
 #include <stdio.h>
 
-#include "hound_wlan.h"
-
-#include "stm32_it.h"
-#include "websocket.h"
+// HOUND Libraries
 #include "com_proto.h"
 #include "com_command.h"
 #include "com_subscription.h"
-#include "hd44780.h"
 #include "hound_adc.h"
-#include "hound_fixed.h"
+#include "hound_alignment.h"
 #include "hound_debug.h"
 #include "hound_identity.h"
-#include "watchdog.h"
+#include "hound_fixed.h"
 #include "hound_time.h"
-
-#include "socket_control.h"
-
+#include "hound_wlan.h"
+#include "hd44780.h"
 #include "heartbeat.h"
-#include "hound_alignment.h"
+#include "socket_control.h"
+#include "watchdog.h"
+#include "websocket.h"
 
+// ST Libraries
+#include "stm32_it.h"
 #include "stm32f10x_gpio.h"
 
 
 static volatile sampleSetup_t * primarySample = NULL;
 
-
-/* Private variables ---------------------------------------------------------*/
-volatile uint32_t TimingFlashUpdateTimeout;
-
-uint8_t  USART_Rx_Buffer[USART_RX_DATA_SIZE];
-uint32_t USART_Rx_ptr_in = 0;
-uint32_t USART_Rx_ptr_out = 0;
-uint32_t USART_Rx_length  = 0;
-
-
-
-/*******************************************************************************
- * Function Name  : SparkCoreConfig.
- * Description    : Called in startup routine, before calling C++ constructors.
- * Input          : None.
- * Output         : None.
- * Return         : None.
- *******************************************************************************/
+/*!
+* @brief Initizlize Spark Core
+* 
+* Taken from SparkCore standard firmeware, ininitalizes all 
+*
+* @returns	 Nothing 
+*/
 extern "C" void SparkCoreConfig(void)
 {
-        DECLARE_SYS_HEALTH(ENTERED_SparkCoreConfig);
-#ifdef DFU_BUILD_ENABLE
-	/* Set the Vector Table(VT) base location at 0x5000 */
-	NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x5000);
+    DECLARE_SYS_HEALTH(ENTERED_SparkCoreConfig);
+	
+	#ifdef DFU_BUILD_ENABLE
+		/* Set the Vector Table(VT) base location at 0x5000 */
+		NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x5000);
 
-	USE_SYSTEM_FLAGS = 1;
-#endif
+		USE_SYSTEM_FLAGS = 1;
+	#endif
 
-#ifdef SWD_JTAG_DISABLE
-	/* Disable the Serial Wire JTAG Debug Port SWJ-DP */
-	GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable, ENABLE);
-#endif
 
 	Set_System();
 
@@ -95,28 +68,19 @@ extern "C" void SparkCoreConfig(void)
 
 	/* Enable CRC clock */
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_CRC, ENABLE);
-#if !defined (RGB_NOTIFICATIONS_ON)	&& defined (RGB_NOTIFICATIONS_OFF)
-	LED_RGB_OVERRIDE = 1;
-#endif
 
-#if defined (SPARK_RTC_ENABLE)
-	RTC_Configuration();
-#endif
 
-        // /* Execute Stop mode if STOP mode flag is set via Spark.sleep(pin, mode) */
-        // Enter_STOP_Mode();
+	#if defined (SPARK_RTC_ENABLE)
+		RTC_Configuration();
+	#endif
 
-        // LED_SetRGBColor(RGB_COLOR_WHITE);
-        // LED_On(LED_RGB);
-        // SPARK_LED_FADE = 1;
+	#ifdef DFU_BUILD_ENABLE
+		Load_SystemFlags();
+	#endif
 
-#ifdef DFU_BUILD_ENABLE
-	Load_SystemFlags();
-#endif
-
-#ifdef SPARK_SFLASH_ENABLE
-	sFLASH_Init();
-#endif
+	#ifdef SPARK_SFLASH_ENABLE
+		sFLASH_Init();
+	#endif
 }
 
 /* Main Loop Counter Defines */
@@ -135,14 +99,13 @@ extern "C" void SparkCoreConfig(void)
 
 #define COM_BUFFSIZE 400
 
-
-/*******************************************************************************
- * Function Name  : main.
- * Description    : main routine.
- * Input          : None.
- * Output         : None.
- * Return         : None.
- *******************************************************************************/
+/*!
+* @brief HOUND Main Loop
+* 
+* Main Function Implementation
+*
+* @returns	 Nothing 
+*/
 int main(void)
 {
 	int ret = 0;
@@ -420,8 +383,10 @@ int main(void)
 								// Send back response
 								buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"sub\",\"result\":0}", reference);
 								Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
+							} else {
+								buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"sub\",\"result\":-1,\"msg\":\"Sub Not Mapped\"}", reference);
+								Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);	
 							}
-
 						} else if (recvBuff[0] == 0x4) {
 							if (g_FastSubscription != NULL)
 							{
@@ -431,6 +396,9 @@ int main(void)
 
 								buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"ws\",\"result\":0}", reference);
 								Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);
+							} else {
+								buffSendSize = snprintf((char *)sComBuff, COM_BUFFSIZE, "{\"e\":%d,\"op\":\"ws\",\"result\":-1,\"msg\":\"Sub Not Mapped\"}", reference);
+								Communication::HoundProto::sendData(sComBuff, buffSendSize, &recvAddress);	
 							}
 						}
 					}

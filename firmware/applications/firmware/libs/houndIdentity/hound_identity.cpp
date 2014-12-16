@@ -23,6 +23,7 @@ HoundIdentity::HoundIdentity(void)
 {
 	//strcpy(hound_id, "53ff6d065067544847310187");
 	strcpy(hound_id, "48ff6c065067555026311387");
+	//strcpy(hound_id, "58ff6c065067555026311387");
 }
 
 HoundIdentity::~HoundIdentity(void)

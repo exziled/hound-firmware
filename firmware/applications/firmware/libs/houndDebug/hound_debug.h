@@ -30,10 +30,54 @@
 class HoundDebug
 {
 	public:
+	   /*!
+		* @brief Log an Error
+		* 
+		* Alert the user that an error occured
+		*
+		* @param [in] 	int		location 	 		Specify the location (defines above) to log the error to
+		* @param [in]	int 	error_number		Some arbitrary identification number
+		* @param [in]	ptr 	log_message			Small message to describe error
+		*
+		* @returns	 Nothing 
+		*/
 		static void logError(int location, int error_number, char * log_message);
+
+	   /*!
+		* @brief Log an Error
+		* 
+		* Alert the user that an error occured, output at the DEFAULT_LOG_LOCATION
+		*
+		* @param [in]	int 	error_number		Some arbitrary identification number
+		* @param [in]	ptr 	log_message			Small message to describe error
+		*
+		* @returns	 Nothing 
+		*/
 		static void logError(int error_number, char * log_message);
+
+	   /*!
+		* @brief Log a Message
+		* 
+		* Alert the user of something, output at the DEFAULT_LOG_LOCATION
+		*
+		* @param [in]	int 	message_number		Some arbitrary identification number
+		* @param [in]	ptr 	log_message			Small message to describe error
+		*
+		* @returns	 Nothing 
+		*/
 		static void logMessage(int message_number, char * log_message);
 
+	   /*!
+		* @brief Log Anything
+		* 
+		* Alert the user that something happened
+		*
+		* @param [in] 	int		location 	 		Specify the location (defines above) to log the error to
+		* @param [in]	int 	error_number		Some arbitrary identification number
+		* @param [in]	ptr 	log_message			Small message to describe error
+		*
+		* @returns	 Nothing 
+		*/
 		static void log(int location, int error_number, char * log_message);
 };
 

@@ -1,3 +1,17 @@
+/*!
+ * @file heartbeat.cpp
+ * 
+ * @brief HOUND Hearbeat Library
+ * 
+ * @author Benjamin Carlson
+ * @author Blake Bourque
+ * 
+ * @date November 20, 2014
+ * 
+ * Functional implementation for HOUND heartbeat functions.  Alerts the user if the board
+ * ceases operation.
+ */
+
 #include "heartbeat.h"
 
 static bool heartbeat_state = 0;

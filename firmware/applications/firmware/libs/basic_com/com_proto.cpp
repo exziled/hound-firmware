@@ -16,7 +16,6 @@
 #include "com_proto.h"
 
 // Standard Libraries
-#include <string.h>
 #include <stdlib.h>
 // HOUND Libraries
 #include "hound_debug.h"
@@ -87,23 +86,6 @@ HoundProto::HoundProto(int listenPort)
     	m_sockHandle = -1;
     	return;
     }
-
-    // Enable listening on specified port with 1 connection buffer;
-    // ret = listen(m_sockHandle, 1);
-
-    // if (ret < 0)
-    // {
-    //     #ifdef DEBUG_ON
-    // 	HoundDebug::logError(LOG_LOCATION_LCD, ret, "Listen failed");
-    //     #endif
-
-    // 	closesocket(m_sockHandle);
-    // 	m_sockHandle = -1;
-    // 	return;
-    // }
-
-   	// Reset socket address struct
-	//memset(m_sockAddress, 0, m_sockAddressSize);
 }
 
 // Dtor
@@ -158,8 +140,6 @@ int HoundProto::getData(uint8_t * recvBuffer, int buffSize, ipAddr_t * ipAddr)
 	    	HoundDebug::logError(LOG_LOCATION_LCD, -1, "Recive Failure");
             #endif
 	    }
-
-	    //memset(m_sockAddress, 0, m_sockAddressSize);
 
 	} else {
 		#ifdef DEBUG_ON

@@ -34,10 +34,36 @@ namespace Communication
 	class HoundProto
 	{
 	public:
+		/*!
+		 * @brief HoundProto Ctor
+		 * 
+		 * @param [in]			int 	listenPort			Port on which getData will isten
+		 *
+		 * @returns	 0 on success, less than 0 otherwise
+		 */
 		HoundProto(int listenPort);
 		~HoundProto();
 
+		/*!
+		 * @brief Get data from HOUND Node
+		 * 
+		 * @param [in|out]		ptr 	recvBuffer			Buffer to fill with recieved data
+		 * @param [in]	 		int 	buffSize			Maximum size of recieve buffer
+		 * @param [in|out]		ptr 	ipAddr 				IP address struct to fill with ip of recieved data
+		 *
+		 * @returns	 0 on success, less than 0 otherwise
+		 */
 		int getData(uint8_t * recvBuffer, int buffSize, ipAddr_t * ipAddr);
+
+		/*!
+		 * @brief Send data to HOUND Server
+		 * 
+		 * @param [in|out]		ptr 	sendBuffer			Buffer to send to server
+		 * @param [in]	 		int 	buffSize			Maximum size of recieve buffer
+		 * @param [in|out]		ptr 	ipAddr 				IP Address of remote server
+		 *
+		 * @returns	 0 on success, less than 0 otherwise
+		 */
 		static int sendData(uint8_t * sendBuffer, int bufferSize, ipAddr_t * ipAddr);
 
 	private:
